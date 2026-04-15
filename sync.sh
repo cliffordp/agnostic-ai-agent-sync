@@ -1,0 +1,671 @@
+#!/usr/bin/env bash
+# Agnostic AI Agent Sync - macOS & Linux
+# https://github.com/cliffordp/agnostic-ai-agent-sync
+
+set -euo pipefail
+
+# ─── Colors ───────────────────────────────────────────────────────
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+DIM='\033[2m'
+RESET='\033[0m'
+
+CONFIG_FILE="$HOME/.agnostic-sync"
+VERSION="1.0.0"
+
+# ─── Agent mapping ───────────────────────────────────────────────
+# Format: LOCAL_PATH|HUB_SUBFOLDER
+# HUB_SUBFOLDER is relative to the Hub path
+build_agent_map() {
+    AGENT_MAP=(
+        "$HOME/.claude/skills|skills"
+        "$HOME/.claude/config|config"
+        "$HOME/.codex/skills|skills"
+        "$HOME/.codex/config|config"
+        "$HOME/.cursor/skills|skills"
+        "$HOME/.cursorrules|config/CLAUDE.md"
+        "$HOME/.gemini/antigravity/skills|skills"
+        "$HOME/.codeium/windsurf/skills|skills"
+        "$HOME/.qoder/skills|skills"
+    )
+}
+
+# ─── Not supported (intentionally excluded) ──────────────────────
+# These AI tools store config in ways that can't be safely symlinked:
+#
+# Cline        — VS Code extension. Global config lives in VS Code
+#                settings.json, not a standalone directory.
+#                Per-project rules go in .cline/ within the repo.
+#
+# Roo Code     — VS Code extension. Same architecture as Cline.
+#                Per-project rules go in .roo/ within the repo.
+#
+# Aider        — Config is a single YAML file (~/.aider.conf.yml),
+#                not a directory of skills. Per-project .aider/.
+#
+# Continue.dev — Config is ~/.continue/config.json (a JSON blob with
+#                API keys, model settings, etc). Not skill-based.
+#
+# GitHub Copilot — Config embedded in VS Code/JetBrains settings.
+#                  Per-repo instructions in .github/copilot-instructions.md.
+
+# ─── Helpers ─────────────────────────────────────────────────────
+save_config() {
+    echo "HUB_PATH=$HUB_PATH" > "$CONFIG_FILE"
+    echo -e "  ${DIM}(Saved Hub path to $CONFIG_FILE)${RESET}"
+}
+
+load_config() {
+    if [ -f "$CONFIG_FILE" ]; then
+        # shellcheck source=/dev/null
+        source "$CONFIG_FILE"
+        if [ -n "${HUB_PATH:-}" ] && [ -d "$HUB_PATH" ]; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+resolve_target() {
+    local hub_sub="$1"
+    echo "$HUB_PATH/$hub_sub"
+}
+
+apply_lock() {
+    local path="$1"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        chflags -h uchg "$path" 2>/dev/null || true
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        sudo chattr +i "$path" 2>/dev/null || true
+    fi
+}
+
+remove_lock() {
+    local path="$1"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        chflags -h nouchg "$path" 2>/dev/null || true
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        sudo chattr -i "$path" 2>/dev/null || true
+    fi
+}
+
+is_locked() {
+    local path="$1"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        ls -lO "$path" 2>/dev/null | grep -q "uchg" && return 0
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        lsattr "$path" 2>/dev/null | grep -q "i" && return 0
+    fi
+    return 1
+}
+
+# ─── STATUS command ──────────────────────────────────────────────
+cmd_status() {
+    echo ""
+    echo "==============================================="
+    echo "  Agnostic AI Agent Sync — Status"
+    echo "==============================================="
+    echo ""
+
+    if ! load_config; then
+        echo -e "${YELLOW}No saved configuration found.${RESET}"
+        echo "Run ./sync.sh first to set up your Hub."
+        exit 0
+    fi
+
+    echo -e "Hub: ${BOLD}$HUB_PATH${RESET}"
+    echo ""
+
+    build_agent_map
+
+    HEALTHY=0
+    BROKEN=0
+    UNLINKED=0
+    LOCKED_COUNT=0
+    UNLOCKED_COUNT=0
+
+    for ENTRY in "${AGENT_MAP[@]}"; do
+        LOCAL_PATH="${ENTRY%%|*}"
+        HUB_SUB="${ENTRY##*|}"
+        TARGET=$(resolve_target "$HUB_SUB")
+        PARENT_DIR=$(dirname "$LOCAL_PATH")
+        BASENAME=$(basename "$LOCAL_PATH")
+
+        # Skip if IDE not installed
+        if [ ! -d "$PARENT_DIR" ]; then
+            continue
+        fi
+
+        if [ -L "$LOCAL_PATH" ]; then
+            ACTUAL=$(readlink "$LOCAL_PATH" 2>/dev/null || echo "UNREADABLE")
+            if [ "$ACTUAL" = "$TARGET" ]; then
+                if is_locked "$LOCAL_PATH" 2>/dev/null; then
+                    echo -e "  ${GREEN}✓${RESET} $LOCAL_PATH → $TARGET ${GREEN}[locked]${RESET}"
+                    LOCKED_COUNT=$((LOCKED_COUNT + 1))
+                else
+                    echo -e "  ${YELLOW}⚠${RESET} $LOCAL_PATH → $TARGET ${YELLOW}[unlocked]${RESET}"
+                    UNLOCKED_COUNT=$((UNLOCKED_COUNT + 1))
+                fi
+                HEALTHY=$((HEALTHY + 1))
+            else
+                echo -e "  ${RED}✗${RESET} $LOCAL_PATH → $ACTUAL ${RED}[wrong target]${RESET}"
+                echo -e "    ${DIM}Expected: $TARGET${RESET}"
+                BROKEN=$((BROKEN + 1))
+            fi
+        elif [ -e "$LOCAL_PATH" ]; then
+            echo -e "  ${YELLOW}○${RESET} $LOCAL_PATH ${YELLOW}[not synced — real file/dir exists]${RESET}"
+            UNLINKED=$((UNLINKED + 1))
+        else
+            echo -e "  ${DIM}–${RESET} $LOCAL_PATH ${DIM}[empty — ready to sync]${RESET}"
+            UNLINKED=$((UNLINKED + 1))
+        fi
+    done
+
+    echo ""
+    echo "─────────────────────────────────────"
+    echo -e "  Synced: ${GREEN}$HEALTHY${RESET}  (${GREEN}$LOCKED_COUNT locked${RESET}, ${YELLOW}$UNLOCKED_COUNT unlocked${RESET})"
+    [ $BROKEN -gt 0 ] && echo -e "  Broken: ${RED}$BROKEN${RESET}"
+    [ $UNLINKED -gt 0 ] && echo -e "  Not synced: ${YELLOW}$UNLINKED${RESET}"
+    echo ""
+
+    if [ $BROKEN -gt 0 ] || [ $UNLOCKED_COUNT -gt 0 ] || [ $UNLINKED -gt 0 ]; then
+        echo -e "Run ${BOLD}./sync.sh${RESET} to fix issues."
+    else
+        echo -e "${GREEN}Everything looks good!${RESET}"
+    fi
+}
+
+# ─── Hub path selection (guided) ─────────────────────────────────
+select_hub() {
+    # Check for saved config first
+    if load_config; then
+        echo -e "Found saved Hub: ${BOLD}$HUB_PATH${RESET}"
+        read -rp "[?] Use this Hub? (Y/n): " USE_SAVED
+        if [[ ! "$USE_SAVED" =~ ^[Nn]$ ]]; then
+            return
+        fi
+        echo ""
+    fi
+
+    CURRENT_DIR=$(pwd)
+
+    echo "Your Hub is the single folder where all your AI agent skills and"
+    echo "config will live. Every IDE gets symlinked to it."
+    echo ""
+    echo -e "Current directory: ${BOLD}$CURRENT_DIR${RESET}"
+    echo ""
+    read -rp "[?] Is the current directory your Hub? (y/N): " USE_PWD
+
+    if [[ "$USE_PWD" =~ ^[Yy]$ ]]; then
+        HUB_PATH="$CURRENT_DIR"
+    else
+        echo ""
+        read -rp "[?] Do you already have a Hub folder somewhere? (y/N): " HUB_EXISTS
+
+        if [[ "$HUB_EXISTS" =~ ^[Yy]$ ]]; then
+            read -rp "Enter the path to your existing Hub (e.g. ~/Dropbox/agents): " HUB_PATH
+            HUB_PATH="${HUB_PATH/#\~/$HOME}"
+            HUB_PATH="${HUB_PATH%/}"
+
+            if [ -z "$HUB_PATH" ]; then
+                echo -e "${RED}Error: Path cannot be empty. Aborting.${RESET}"
+                exit 1
+            fi
+
+            if [ ! -d "$HUB_PATH" ]; then
+                echo -e "${RED}Error: '$HUB_PATH' does not exist. Aborting.${RESET}"
+                exit 1
+            fi
+        else
+            echo ""
+            echo "Let's create one. Pick a parent location:"
+            echo ""
+            echo "  1) ~/Documents"
+            echo "  2) ~/Dropbox"
+            echo "  3) ~/Library/CloudStorage  (iCloud, OneDrive, etc.)"
+            echo "  4) Enter a custom path"
+            echo ""
+            read -rp "Choose 1-4: " PARENT_CHOICE
+
+            case "$PARENT_CHOICE" in
+                1) PARENT_DIR="$HOME/Documents" ;;
+                2) PARENT_DIR="$HOME/Dropbox" ;;
+                3)
+                    echo ""
+                    echo "Available cloud storage folders:"
+                    if [ -d "$HOME/Library/CloudStorage" ]; then
+                        ls -1 "$HOME/Library/CloudStorage" 2>/dev/null | while read -r dir; do
+                            echo "    $dir"
+                        done
+                    else
+                        echo "    (none found)"
+                    fi
+                    echo ""
+                    read -rp "Enter the full path under CloudStorage (e.g. ~/Library/CloudStorage/Dropbox): " PARENT_DIR
+                    PARENT_DIR="${PARENT_DIR/#\~/$HOME}"
+                    ;;
+                4)
+                    read -rp "Enter the full parent path: " PARENT_DIR
+                    PARENT_DIR="${PARENT_DIR/#\~/$HOME}"
+                    ;;
+                *)
+                    echo -e "${RED}Invalid choice. Aborting.${RESET}"
+                    exit 1
+                    ;;
+            esac
+
+            PARENT_DIR="${PARENT_DIR%/}"
+
+            if [ ! -d "$PARENT_DIR" ]; then
+                echo -e "${RED}Error: '$PARENT_DIR' does not exist. Aborting.${RESET}"
+                exit 1
+            fi
+
+            read -rp "Folder name to create inside $PARENT_DIR (default: agents): " FOLDER_NAME
+            FOLDER_NAME="${FOLDER_NAME:-agents}"
+
+            HUB_PATH="$PARENT_DIR/$FOLDER_NAME"
+
+            if [ -d "$HUB_PATH" ]; then
+                echo -e "${YELLOW}Note: '$HUB_PATH' already exists. Using it as your Hub.${RESET}"
+            else
+                mkdir -p "$HUB_PATH"
+                echo -e "${GREEN}[Created]${RESET} $HUB_PATH"
+            fi
+        fi
+    fi
+
+    echo ""
+    echo -e "Hub: ${BOLD}$HUB_PATH${RESET}"
+}
+
+# ─── Auto-detect and merge existing skills ───────────────────────
+merge_existing_skills() {
+    build_agent_map
+
+    FOUND_FILES=0
+    declare -a SOURCES_WITH_CONTENT=()
+
+    for ENTRY in "${AGENT_MAP[@]}"; do
+        LOCAL_PATH="${ENTRY%%|*}"
+        HUB_SUB="${ENTRY##*|}"
+
+        # Only look at skills directories, skip config and file mappings
+        if [[ "$HUB_SUB" != "skills" ]]; then
+            continue
+        fi
+
+        # Skip if it's already a symlink (already managed)
+        if [ -L "$LOCAL_PATH" ]; then
+            continue
+        fi
+
+        # Skip if it doesn't exist or is empty
+        if [ -d "$LOCAL_PATH" ]; then
+            FILE_COUNT=$(find "$LOCAL_PATH" -type f 2>/dev/null | wc -l | tr -d ' ')
+            if [ "$FILE_COUNT" -gt 0 ]; then
+                FOUND_FILES=$((FOUND_FILES + FILE_COUNT))
+                SOURCES_WITH_CONTENT+=("$LOCAL_PATH ($FILE_COUNT files)")
+            fi
+        fi
+    done
+
+    if [ $FOUND_FILES -eq 0 ]; then
+        return
+    fi
+
+    echo ""
+    echo -e "${CYAN}${BOLD}Found existing skill files on your system:${RESET}"
+    for src in "${SOURCES_WITH_CONTENT[@]}"; do
+        echo -e "  • $src"
+    done
+    echo ""
+    read -rp "[?] Copy these into your Hub ($HUB_PATH/skills/) before syncing? (y/N): " DO_MERGE
+
+    if [[ ! "$DO_MERGE" =~ ^[Yy]$ ]]; then
+        echo -e "  ${DIM}Skipped. (They'll be backed up during sync anyway.)${RESET}"
+        return
+    fi
+
+    for ENTRY in "${AGENT_MAP[@]}"; do
+        LOCAL_PATH="${ENTRY%%|*}"
+        HUB_SUB="${ENTRY##*|}"
+
+        if [[ "$HUB_SUB" != "skills" ]]; then continue; fi
+        if [ -L "$LOCAL_PATH" ]; then continue; fi
+        if [ ! -d "$LOCAL_PATH" ]; then continue; fi
+
+        FILE_COUNT=$(find "$LOCAL_PATH" -type f 2>/dev/null | wc -l | tr -d ' ')
+        if [ "$FILE_COUNT" -gt 0 ]; then
+            # Copy files, don't overwrite existing
+            cp -rn "$LOCAL_PATH"/* "$HUB_PATH/skills/" 2>/dev/null || true
+            echo -e "  ${GREEN}[Merged]${RESET} $LOCAL_PATH → $HUB_PATH/skills/"
+        fi
+    done
+    echo ""
+}
+
+# ─── Ensure Hub subdirectories ───────────────────────────────────
+ensure_hub_dirs() {
+    MISSING_DIRS=()
+    [ ! -d "$HUB_PATH/skills" ] && MISSING_DIRS+=("skills")
+    [ ! -d "$HUB_PATH/config" ] && MISSING_DIRS+=("config")
+
+    if [ ${#MISSING_DIRS[@]} -gt 0 ]; then
+        for d in "${MISSING_DIRS[@]}"; do
+            mkdir -p "$HUB_PATH/$d"
+            echo -e "  ${GREEN}[Created]${RESET} $HUB_PATH/$d"
+        done
+    fi
+}
+
+# ─── SYNC command (main) ────────────────────────────────────────
+cmd_sync() {
+    echo ""
+    echo "==============================================="
+    echo "  Agnostic AI Agent Sync (macOS & Linux)"
+    echo "==============================================="
+    echo ""
+
+    select_hub
+    ensure_hub_dirs
+    merge_existing_skills
+    save_config
+
+    build_agent_map
+
+    # ── PHASE 1: ANALYSIS ──
+    echo ""
+    echo -e "${CYAN}${BOLD}=== PHASE 1: ANALYSIS (Dry-Run) ===${RESET}"
+    echo "Scanning your system for installed AI agents..."
+    echo ""
+
+    declare -a PLAN_ACTION=()
+    declare -a PLAN_DISPLAY=()
+    ERRORS=0
+    SKIPPED=0
+    ALREADY_OK=0
+
+    for ENTRY in "${AGENT_MAP[@]}"; do
+        LOCAL_PATH="${ENTRY%%|*}"
+        HUB_SUB="${ENTRY##*|}"
+        TARGET=$(resolve_target "$HUB_SUB")
+        PARENT_DIR=$(dirname "$LOCAL_PATH")
+
+        # Skip if the parent IDE directory doesn't exist (agent not installed)
+        if [ ! -d "$PARENT_DIR" ]; then
+            SKIPPED=$((SKIPPED + 1))
+            continue
+        fi
+
+        # Verify Hub target exists
+        if [ ! -e "$TARGET" ]; then
+            echo -e "  ${YELLOW}[SKIP]${RESET} Hub target '$TARGET' does not exist yet. Skipping $LOCAL_PATH."
+            SKIPPED=$((SKIPPED + 1))
+            continue
+        fi
+
+        # ── Classify what currently lives at LOCAL_PATH ──
+        if [ -L "$LOCAL_PATH" ]; then
+            EXISTING_TARGET=$(readlink "$LOCAL_PATH" 2>/dev/null || echo "UNREADABLE")
+            if [ "$EXISTING_TARGET" = "$TARGET" ]; then
+                PLAN_ACTION+=("relock|$LOCAL_PATH")
+                PLAN_DISPLAY+=("  ${GREEN}[OK]${RESET}      $LOCAL_PATH — already correct. Will verify lock.")
+                ALREADY_OK=$((ALREADY_OK + 1))
+            elif [ "$EXISTING_TARGET" = "UNREADABLE" ]; then
+                echo -e "  ${RED}[ERROR]${RESET}   Cannot read symlink at $LOCAL_PATH. Please inspect manually."
+                ERRORS=$((ERRORS + 1))
+            else
+                echo -e "  ${YELLOW}[WARN]${RESET}    $LOCAL_PATH points to unexpected location:"
+                echo -e "            Current:  $EXISTING_TARGET"
+                echo -e "            Expected: $TARGET"
+                PLAN_ACTION+=("replace_symlink|$LOCAL_PATH|$TARGET")
+                PLAN_DISPLAY+=("  ${YELLOW}[REPLACE]${RESET} $LOCAL_PATH — will redirect to Hub.")
+            fi
+        elif [ -d "$LOCAL_PATH" ]; then
+            PLAN_ACTION+=("backup_dir|$LOCAL_PATH|$TARGET")
+            PLAN_DISPLAY+=("  ${YELLOW}[BACKUP]${RESET}  $LOCAL_PATH — directory will be backed up, then linked.")
+        elif [ -f "$LOCAL_PATH" ]; then
+            PLAN_ACTION+=("backup_file|$LOCAL_PATH|$TARGET")
+            PLAN_DISPLAY+=("  ${YELLOW}[BACKUP]${RESET}  $LOCAL_PATH — file will be backed up, then linked.")
+        else
+            PLAN_ACTION+=("fresh_link|$LOCAL_PATH|$TARGET")
+            PLAN_DISPLAY+=("  ${GREEN}[NEW]${RESET}     $LOCAL_PATH → $TARGET")
+        fi
+    done
+
+    # ── Print the plan ──
+    if [ ${#PLAN_DISPLAY[@]} -eq 0 ]; then
+        echo ""
+        echo "No supported AI agent directories were found on this machine."
+        echo "(Skipped $SKIPPED paths where the parent IDE is not installed.)"
+        exit 0
+    fi
+
+    echo -e "${BOLD}Planned Actions:${RESET}"
+    for line in "${PLAN_DISPLAY[@]}"; do
+        echo -e "$line"
+    done
+
+    if [ $SKIPPED -gt 0 ]; then
+        echo ""
+        echo -e "  ${DIM}($SKIPPED agent paths skipped — those IDEs are not installed.)${RESET}"
+    fi
+
+    if [ $ERRORS -gt 0 ]; then
+        echo ""
+        echo -e "${RED}${BOLD}✗ $ERRORS critical issue(s) detected. Aborting for safety.${RESET}"
+        echo "  Please resolve the errors above and re-run."
+        exit 1
+    fi
+
+    # If everything is already correctly synced, just confirm and exit
+    if [ ${#PLAN_ACTION[@]} -eq $ALREADY_OK ] && [ $ALREADY_OK -gt 0 ]; then
+        echo ""
+        echo -e "${GREEN}${BOLD}✓ All $ALREADY_OK agent(s) already synced and locked. Nothing to do!${RESET}"
+        exit 0
+    fi
+
+    # ── PHASE 2: CONFIRMATION ──
+    echo ""
+    echo -e "${CYAN}${BOLD}=== PHASE 2: CONFIRMATION ===${RESET}"
+    read -rp "[?] Does this plan look correct? Type 'y' to implement, or anything else to abort: " CONFIRM
+
+    if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
+        echo ""
+        echo "Safely aborted. Zero files were touched."
+        exit 0
+    fi
+
+    # ── PHASE 3: IMPLEMENTATION ──
+    echo ""
+    echo -e "${CYAN}${BOLD}=== PHASE 3: IMPLEMENTATION ===${RESET}"
+
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+    for ACTION_ENTRY in "${PLAN_ACTION[@]}"; do
+        IFS='|' read -r ACTION_TYPE ACTION_PATH ACTION_TARGET <<< "$ACTION_ENTRY"
+
+        case "$ACTION_TYPE" in
+            relock)
+                remove_lock "$ACTION_PATH"
+                apply_lock "$ACTION_PATH"
+                echo -e " ${GREEN}[OK]${RESET} Verified lock: $ACTION_PATH"
+                ;;
+
+            replace_symlink)
+                remove_lock "$ACTION_PATH"
+                rm "$ACTION_PATH"
+                ln -s "$ACTION_TARGET" "$ACTION_PATH"
+                apply_lock "$ACTION_PATH"
+                echo -e " ${GREEN}[OK]${RESET} Replaced and locked: $ACTION_PATH → $ACTION_TARGET"
+                ;;
+
+            backup_dir)
+                BACKUP_PATH="${ACTION_PATH}.backup_${TIMESTAMP}"
+                mv "$ACTION_PATH" "$BACKUP_PATH"
+                echo -e " ${YELLOW}[BACKED UP]${RESET} $ACTION_PATH → $BACKUP_PATH"
+                ln -s "$ACTION_TARGET" "$ACTION_PATH"
+                apply_lock "$ACTION_PATH"
+                echo -e " ${GREEN}[OK]${RESET} Linked and locked: $ACTION_PATH → $ACTION_TARGET"
+                ;;
+
+            backup_file)
+                BACKUP_PATH="${ACTION_PATH}.backup_${TIMESTAMP}"
+                mv "$ACTION_PATH" "$BACKUP_PATH"
+                echo -e " ${YELLOW}[BACKED UP]${RESET} $ACTION_PATH → $BACKUP_PATH"
+                ln -s "$ACTION_TARGET" "$ACTION_PATH"
+                apply_lock "$ACTION_PATH"
+                echo -e " ${GREEN}[OK]${RESET} Linked and locked: $ACTION_PATH → $ACTION_TARGET"
+                ;;
+
+            fresh_link)
+                ln -s "$ACTION_TARGET" "$ACTION_PATH"
+                apply_lock "$ACTION_PATH"
+                echo -e " ${GREEN}[OK]${RESET} Created and locked: $ACTION_PATH → $ACTION_TARGET"
+                ;;
+        esac
+    done
+
+    echo ""
+    echo "==============================================="
+    echo -e "${GREEN}${BOLD}  ✓ Success! All agents are securely synced.${RESET}"
+    echo "==============================================="
+
+    # Offer cleanup of backup files
+    offer_cleanup
+
+    echo ""
+    echo "Useful commands:"
+    echo "  ./sync.sh status   — Check health of all symlinks"
+    echo "  ./sync.sh cleanup  — Remove old backup files"
+    echo "  ./unsync.sh        — Unlock all symlinks for manual editing"
+}
+
+# ─── CLEANUP command ─────────────────────────────────────────────
+find_backups() {
+    build_agent_map
+    declare -a BACKUP_PATHS=()
+
+    for ENTRY in "${AGENT_MAP[@]}"; do
+        LOCAL_PATH="${ENTRY%%|*}"
+        PARENT_DIR=$(dirname "$LOCAL_PATH")
+        BASENAME=$(basename "$LOCAL_PATH")
+
+        if [ ! -d "$PARENT_DIR" ]; then continue; fi
+
+        # Find .backup_ files/dirs matching this path
+        while IFS= read -r -d '' backup; do
+            BACKUP_PATHS+=("$backup")
+        done < <(find "$PARENT_DIR" -maxdepth 1 -name "${BASENAME}.backup_*" -print0 2>/dev/null)
+    done
+
+    echo "${BACKUP_PATHS[@]}"
+}
+
+offer_cleanup() {
+    build_agent_map
+    declare -a BACKUP_PATHS=()
+
+    for ENTRY in "${AGENT_MAP[@]}"; do
+        LOCAL_PATH="${ENTRY%%|*}"
+        PARENT_DIR=$(dirname "$LOCAL_PATH")
+        BASENAME=$(basename "$LOCAL_PATH")
+
+        if [ ! -d "$PARENT_DIR" ]; then continue; fi
+
+        while IFS= read -r -d '' backup; do
+            BACKUP_PATHS+=("$backup")
+        done < <(find "$PARENT_DIR" -maxdepth 1 -name "${BASENAME}.backup_*" -print0 2>/dev/null)
+    done
+
+    if [ ${#BACKUP_PATHS[@]} -eq 0 ]; then
+        return
+    fi
+
+    echo ""
+    echo -e "${CYAN}${BOLD}Found ${#BACKUP_PATHS[@]} backup(s) from previous sync runs:${RESET}"
+    TOTAL_SIZE=0
+    for backup in "${BACKUP_PATHS[@]}"; do
+        if [ -d "$backup" ]; then
+            SIZE=$(du -sh "$backup" 2>/dev/null | cut -f1)
+        else
+            SIZE=$(ls -lh "$backup" 2>/dev/null | awk '{print $5}')
+        fi
+        echo -e "  ${DIM}$backup ($SIZE)${RESET}"
+    done
+
+    echo ""
+    read -rp "[?] Delete these backups? They are no longer needed. (y/N): " DO_CLEANUP
+
+    if [[ ! "$DO_CLEANUP" =~ ^[Yy]$ ]]; then
+        echo -e "  ${DIM}Kept. Run ./sync.sh cleanup anytime to remove them later.${RESET}"
+        return
+    fi
+
+    for backup in "${BACKUP_PATHS[@]}"; do
+        rm -rf "$backup"
+        echo -e "  ${GREEN}[Deleted]${RESET} $backup"
+    done
+    echo -e "${GREEN}Cleanup complete.${RESET}"
+}
+
+cmd_cleanup() {
+    echo ""
+    echo "==============================================="
+    echo "  Agnostic AI Agent Sync — Cleanup Backups"
+    echo "==============================================="
+    echo ""
+
+    offer_cleanup
+
+    build_agent_map
+    declare -a CHECK_BACKUPS=()
+    for ENTRY in "${AGENT_MAP[@]}"; do
+        LOCAL_PATH="${ENTRY%%|*}"
+        PARENT_DIR=$(dirname "$LOCAL_PATH")
+        BASENAME=$(basename "$LOCAL_PATH")
+        if [ ! -d "$PARENT_DIR" ]; then continue; fi
+        while IFS= read -r -d '' backup; do
+            CHECK_BACKUPS+=("$backup")
+        done < <(find "$PARENT_DIR" -maxdepth 1 -name "${BASENAME}.backup_*" -print0 2>/dev/null)
+    done
+
+    if [ ${#CHECK_BACKUPS[@]} -eq 0 ]; then
+        echo "No backup files found. Nothing to clean up."
+    fi
+}
+
+# ─── CLI router ──────────────────────────────────────────────────
+case "${1:-}" in
+    status)
+        cmd_status
+        ;;
+    cleanup)
+        cmd_cleanup
+        ;;
+    version|--version|-v)
+        echo "Agnostic AI Agent Sync v$VERSION"
+        ;;
+    help|--help|-h)
+        echo "Usage: ./sync.sh [command]"
+        echo ""
+        echo "Commands:"
+        echo "  (none)     Run the interactive sync wizard"
+        echo "  status     Check health of all symlinks"
+        echo "  cleanup    Remove old .backup_ files from previous syncs"
+        echo "  version    Show version number"
+        echo "  help       Show this help message"
+        ;;
+    "")
+        cmd_sync
+        ;;
+    *)
+        echo -e "${RED}Unknown command: $1${RESET}"
+        echo "Run ./sync.sh help for usage."
+        exit 1
+        ;;
+esac
