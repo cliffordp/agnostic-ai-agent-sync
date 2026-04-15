@@ -36,9 +36,19 @@ Worse, existing sync approaches create regular symlinks that are **easily overwr
 Ran on Cliff's macOS after he already manually created symlinks (what this script would automatically do for you), indicating that it gracefully works even if you've partially implemented what this script does.
 
 <img width="364" height="116" alt="2026-04-15 sync status" src="https://github.com/user-attachments/assets/8a9c75d9-4098-4b17-a2a8-7a0e35163b80" />
+
+* * *
+
 <img width="762" height="382" alt="2026-04-15 sync 1 of 2" src="https://github.com/user-attachments/assets/3cb8f345-7269-4390-b210-b209a9c46eac" />
 <img width="866" height="314" alt="2026-04-15 sync 2 of 2" src="https://github.com/user-attachments/assets/0c7ef861-82e3-4aa6-add2-3cedff3c3f32" />
+
+* * *
+
 <img width="778" height="312" alt="2026-04-15 sync status after syncing" src="https://github.com/user-attachments/assets/c1557cf8-ce4f-4ae9-8b5f-331778d4675e" />
+
+* * *
+
+<img width="538" height="376" alt="2026-04-15 easily choose your Hub&#39;s location" src="https://github.com/user-attachments/assets/c88d25b9-fa66-4a04-b9cb-f6e6d2463c44" />
 
 ## Setup Guide
 
