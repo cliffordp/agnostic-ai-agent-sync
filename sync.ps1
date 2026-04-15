@@ -76,8 +76,9 @@ function Invoke-Status {
 
         if (-Not (Test-Path $parentDir)) { continue }
 
-        if (Test-Path $localPath) {
-            $item = Get-Item $localPath -Force
+        $item = Get-Item -LiteralPath $localPath -Force -ErrorAction SilentlyContinue
+
+        if ($null -ne $item) {
             $isLink = ($item.Attributes -match "ReparsePoint")
 
             if ($isLink) {
@@ -85,9 +86,14 @@ function Invoke-Status {
                 try { $existingTarget = $item.Target } catch {}
 
                 if ($existingTarget -eq $target) {
-                    Write-Host "  + $localPath -> $target [synced]" -ForegroundColor Green
-                    $healthy++
-                    $locked++
+                    if (-Not (Test-Path $target)) {
+                        Write-Host "  x $localPath -> $target [dangling - Target Hub missing]" -ForegroundColor Red
+                        $broken++
+                    } else {
+                        Write-Host "  v $localPath -> $target [locked]" -ForegroundColor Green
+                        $healthy++
+                        $locked++
+                    }
                 } else {
                     Write-Host "  x $localPath -> $existingTarget [wrong target]" -ForegroundColor Red
                     Write-Host "    Expected: $target" -ForegroundColor DarkGray
@@ -383,49 +389,98 @@ function Invoke-Sync {
     Write-Host "=== PHASE 3: IMPLEMENTATION ===" -ForegroundColor Cyan
 
     $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+    $walFile = "$env:USERPROFILE\.agnostic-ai-agent-sync.wal"
+    Out-File -FilePath $walFile -InputObject "" -Force
 
-    foreach ($actionEntry in $planActions) {
-        $parts = $actionEntry -split "\|", 3
-        $actionType = $parts[0]
-        $actionPath = $parts[1]
-        $actionTarget = $parts[2]
-        $basename = Split-Path $actionPath -Leaf
-        $isFile = ($basename -eq ".cursorrules")
+    try {
 
-        switch ($actionType) {
-            "relock" {
-                icacls $actionPath /deny Everyone:`(DE`) > $null 2>&1
-                Write-Host " [OK] Verified lock: $actionPath" -ForegroundColor Green
-            }
-            "replace" {
-                icacls $actionPath /remove:d Everyone > $null 2>&1
-                $item = Get-Item $actionPath -Force
-                if ($item.PSIsContainer) { cmd /c rmdir $actionPath }
-                else { Remove-Item -Path $actionPath -Force }
+        foreach ($actionEntry in $planActions) {
+            $parts = $actionEntry -split "\|", 3
+            $actionType = $parts[0]
+            $actionPath = $parts[1]
+            $actionTarget = $parts[2]
+            $basename = Split-Path $actionPath -Leaf
+            $isFile = ($basename -eq ".cursorrules")
 
-                if ($isFile) { cmd /c mklink "$actionPath" "$actionTarget" > $null 2>&1 }
-                else { New-Item -ItemType Junction -Path $actionPath -Value $actionTarget | Out-Null }
-                icacls $actionPath /deny Everyone:`(DE`) > $null 2>&1
-                Write-Host " [OK] Replaced and locked: $actionPath -> $actionTarget" -ForegroundColor Green
-            }
-            "backup" {
-                $backupPath = "$actionPath.backup_$timestamp"
-                Rename-Item -Path $actionPath -NewName (Split-Path $backupPath -Leaf)
-                Write-Host " [BACKED UP] $actionPath -> $backupPath" -ForegroundColor Yellow
+            switch ($actionType) {
+                "relock" {
+                    icacls $actionPath /remove:d Everyone > $null 2>&1
+                    icacls $actionPath /deny Everyone:`(DE`) > $null 2>&1
+                    "LOCKED|$actionPath" | Out-File -FilePath $walFile -Append
+                    Write-Host " [OK] Verified lock: $actionPath" -ForegroundColor Green
+                }
+                "replace" {
+                    icacls $actionPath /remove:d Everyone > $null 2>&1
+                    $item = Get-Item $actionPath -Force
+                    if ($item.PSIsContainer) { cmd /c rmdir $actionPath }
+                    else { Remove-Item -Path $actionPath -Force }
 
-                if ($isFile) { cmd /c mklink "$actionPath" "$actionTarget" > $null 2>&1 }
-                else { New-Item -ItemType Junction -Path $actionPath -Value $actionTarget | Out-Null }
-                icacls $actionPath /deny Everyone:`(DE`) > $null 2>&1
-                Write-Host " [OK] Linked and locked: $actionPath -> $actionTarget" -ForegroundColor Green
-            }
-            "fresh" {
-                if ($isFile) { cmd /c mklink "$actionPath" "$actionTarget" > $null 2>&1 }
-                else { New-Item -ItemType Junction -Path $actionPath -Value $actionTarget | Out-Null }
-                icacls $actionPath /deny Everyone:`(DE`) > $null 2>&1
-                Write-Host " [OK] Created and locked: $actionPath -> $actionTarget" -ForegroundColor Green
+                    if ($isFile) { cmd /c mklink "$actionPath" "$actionTarget" > $null 2>&1 }
+                    else { New-Item -ItemType Junction -Path $actionPath -Value $actionTarget | Out-Null }
+                    "LINKED|$actionPath" | Out-File -FilePath $walFile -Append
+                    
+                    icacls $actionPath /deny Everyone:`(DE`) > $null 2>&1
+                    "LOCKED|$actionPath" | Out-File -FilePath $walFile -Append
+                    Write-Host " [OK] Replaced and locked: $actionPath -> $actionTarget" -ForegroundColor Green
+                }
+                "backup" {
+                    $backupPath = "$actionPath.backup_$timestamp"
+                    Rename-Item -Path $actionPath -NewName (Split-Path $backupPath -Leaf)
+                    "BACKED_UP|$actionPath|$backupPath" | Out-File -FilePath $walFile -Append
+                    Write-Host " [BACKED UP] $actionPath -> $backupPath" -ForegroundColor Yellow
+
+                    if ($isFile) { cmd /c mklink "$actionPath" "$actionTarget" > $null 2>&1 }
+                    else { New-Item -ItemType Junction -Path $actionPath -Value $actionTarget | Out-Null }
+                    "LINKED|$actionPath" | Out-File -FilePath $walFile -Append
+                    
+                    icacls $actionPath /deny Everyone:`(DE`) > $null 2>&1
+                    "LOCKED|$actionPath" | Out-File -FilePath $walFile -Append
+                    Write-Host " [OK] Linked and locked: $actionPath -> $actionTarget" -ForegroundColor Green
+                }
+                "fresh" {
+                    if ($isFile) { cmd /c mklink "$actionPath" "$actionTarget" > $null 2>&1 }
+                    else { New-Item -ItemType Junction -Path $actionPath -Value $actionTarget | Out-Null }
+                    "LINKED|$actionPath" | Out-File -FilePath $walFile -Append
+                    
+                    icacls $actionPath /deny Everyone:`(DE`) > $null 2>&1
+                    "LOCKED|$actionPath" | Out-File -FilePath $walFile -Append
+                    Write-Host " [OK] Created and locked: $actionPath -> $actionTarget" -ForegroundColor Green
+                }
             }
         }
+    } catch {
+        Write-Host ""
+        Write-Host "⨯ Interrupt caught or error occurred! Rolling back changes..." -ForegroundColor Red
+        
+        if (Test-Path $walFile) {
+            $walLines = Get-Content $walFile
+            [array]::Reverse($walLines)
+            
+            foreach ($line in $walLines) {
+                if ([string]::IsNullOrWhiteSpace($line)) { continue }
+                $parts = $line -split "\|", 3
+                $op = $parts[0]
+                $path1 = $parts[1]
+                $path2 = $parts[2]
+                
+                if ($op -eq "LOCKED") {
+                    icacls $path1 /remove:d Everyone > $null 2>&1
+                } elseif ($op -eq "LINKED") {
+                    $item = Get-Item -LiteralPath $path1 -Force -ErrorAction SilentlyContinue
+                    if ($item.PSIsContainer) { cmd /c rmdir $path1 }
+                    else { Remove-Item -Path $path1 -Force -ErrorAction SilentlyContinue }
+                } elseif ($op -eq "BACKED_UP") {
+                    Rename-Item -Path $path2 -NewName (Split-Path $path1 -Leaf) -Force -ErrorAction SilentlyContinue
+                }
+            }
+            Write-Host "Rollback complete. Your filesystem was restored to its pre-sync state."
+        }
+        
+        Remove-Item -Path $walFile -Force -ErrorAction SilentlyContinue
+        exit
     }
+
+    Remove-Item -Path $walFile -Force -ErrorAction SilentlyContinue
 
     Write-Host ""
     Write-Host "==============================================="

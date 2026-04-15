@@ -142,14 +142,18 @@ cmd_status() {
         if [ -L "$LOCAL_PATH" ]; then
             ACTUAL=$(readlink "$LOCAL_PATH" 2>/dev/null || echo "UNREADABLE")
             if [ "$ACTUAL" = "$TARGET" ]; then
-                if is_locked "$LOCAL_PATH" 2>/dev/null; then
+                if [ ! -e "$LOCAL_PATH" ]; then
+                    echo -e "  ${RED}✗${RESET} $LOCAL_PATH → $TARGET ${RED}[dangling - Target Hub missing]${RESET}"
+                    BROKEN=$((BROKEN + 1))
+                elif is_locked "$LOCAL_PATH" 2>/dev/null; then
                     echo -e "  ${GREEN}✓${RESET} $LOCAL_PATH → $TARGET ${GREEN}[locked]${RESET}"
                     LOCKED_COUNT=$((LOCKED_COUNT + 1))
+                    HEALTHY=$((HEALTHY + 1))
                 else
                     echo -e "  ${YELLOW}⚠${RESET} $LOCAL_PATH → $TARGET ${YELLOW}[unlocked]${RESET}"
                     UNLOCKED_COUNT=$((UNLOCKED_COUNT + 1))
+                    HEALTHY=$((HEALTHY + 1))
                 fi
-                HEALTHY=$((HEALTHY + 1))
             else
                 echo -e "  ${RED}✗${RESET} $LOCAL_PATH → $ACTUAL ${RED}[wrong target]${RESET}"
                 echo -e "    ${DIM}Expected: $TARGET${RESET}"
@@ -485,6 +489,36 @@ cmd_sync() {
     echo -e "${CYAN}${BOLD}=== PHASE 3: IMPLEMENTATION ===${RESET}"
 
     TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    WAL_FILE="$HOME/.agnostic-ai-agent-sync.wal"
+    : > "$WAL_FILE" # Create/truncate the WAL file
+
+    rollback_wal() {
+        echo ""
+        echo -e "${RED}${BOLD}⨯ Interrupt caught or error occurred! Rolling back changes...${RESET}"
+        if [ ! -s "$WAL_FILE" ]; then
+            echo "Nothing to roll back."
+            exit 1
+        fi
+        
+        # Read WAL into array to process in reverse
+        mapfile -t WAL_LINES < "$WAL_FILE"
+        for (( idx=${#WAL_LINES[@]}-1 ; idx>=0 ; idx-- )) ; do
+            IFS='|' read -r OP PATH1 PATH2 <<< "${WAL_LINES[idx]}"
+            if [ "$OP" = "LOCKED" ]; then
+                remove_lock "$PATH1"
+            elif [ "$OP" = "LINKED" ]; then
+                rm -f "$PATH1"
+            elif [ "$OP" = "BACKED_UP" ]; then
+                mv "$PATH2" "$PATH1" 2>/dev/null || true
+            fi
+        done
+        echo "Rollback complete. Your filesystem was restored to its pre-sync state."
+        rm -f "$WAL_FILE"
+        exit 1
+    }
+
+    # Trap interrupts and errors
+    trap 'rollback_wal' INT TERM ERR
 
     for ACTION_ENTRY in "${PLAN_ACTION[@]}"; do
         IFS='|' read -r ACTION_TYPE ACTION_PATH ACTION_TARGET <<< "$ACTION_ENTRY"
@@ -493,6 +527,7 @@ cmd_sync() {
             relock)
                 remove_lock "$ACTION_PATH"
                 apply_lock "$ACTION_PATH"
+                echo "LOCKED|$ACTION_PATH" >> "$WAL_FILE"
                 echo -e " ${GREEN}[OK]${RESET} Verified lock: $ACTION_PATH"
                 ;;
 
@@ -500,35 +535,37 @@ cmd_sync() {
                 remove_lock "$ACTION_PATH"
                 rm "$ACTION_PATH"
                 ln -s "$ACTION_TARGET" "$ACTION_PATH"
+                echo "LINKED|$ACTION_PATH" >> "$WAL_FILE"
                 apply_lock "$ACTION_PATH"
+                echo "LOCKED|$ACTION_PATH" >> "$WAL_FILE"
                 echo -e " ${GREEN}[OK]${RESET} Replaced and locked: $ACTION_PATH → $ACTION_TARGET"
                 ;;
 
-            backup_dir)
+            backup_dir|backup_file)
                 BACKUP_PATH="${ACTION_PATH}.backup_${TIMESTAMP}"
                 mv "$ACTION_PATH" "$BACKUP_PATH"
+                echo "BACKED_UP|$ACTION_PATH|$BACKUP_PATH" >> "$WAL_FILE"
                 echo -e " ${YELLOW}[BACKED UP]${RESET} $ACTION_PATH → $BACKUP_PATH"
                 ln -s "$ACTION_TARGET" "$ACTION_PATH"
+                echo "LINKED|$ACTION_PATH" >> "$WAL_FILE"
                 apply_lock "$ACTION_PATH"
-                echo -e " ${GREEN}[OK]${RESET} Linked and locked: $ACTION_PATH → $ACTION_TARGET"
-                ;;
-
-            backup_file)
-                BACKUP_PATH="${ACTION_PATH}.backup_${TIMESTAMP}"
-                mv "$ACTION_PATH" "$BACKUP_PATH"
-                echo -e " ${YELLOW}[BACKED UP]${RESET} $ACTION_PATH → $BACKUP_PATH"
-                ln -s "$ACTION_TARGET" "$ACTION_PATH"
-                apply_lock "$ACTION_PATH"
+                echo "LOCKED|$ACTION_PATH" >> "$WAL_FILE"
                 echo -e " ${GREEN}[OK]${RESET} Linked and locked: $ACTION_PATH → $ACTION_TARGET"
                 ;;
 
             fresh_link)
                 ln -s "$ACTION_TARGET" "$ACTION_PATH"
+                echo "LINKED|$ACTION_PATH" >> "$WAL_FILE"
                 apply_lock "$ACTION_PATH"
+                echo "LOCKED|$ACTION_PATH" >> "$WAL_FILE"
                 echo -e " ${GREEN}[OK]${RESET} Created and locked: $ACTION_PATH → $ACTION_TARGET"
                 ;;
         esac
     done
+
+    # Clear WAL and traps on success
+    trap - INT TERM ERR
+    rm -f "$WAL_FILE"
 
     echo ""
     echo "==============================================="
