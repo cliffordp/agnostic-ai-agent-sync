@@ -1,1 +1,18 @@
+# OS files
 .DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# Windows shortcuts
+*.lnk
+
+# Editor / IDE metadata
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup files created by this tool
+*.backup_*
