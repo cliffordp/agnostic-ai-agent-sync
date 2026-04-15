@@ -88,19 +88,15 @@ Shows a dashboard of all your synced agents — whether each link is healthy, lo
 
 ## Supported Agents
 
-The script currently maps these paths to your Hub:
+Because the script dynamically fetches tool paths from this repository linearly, the canonical list of supported AI tools is always up to date inside the [`agents.map`](agents.map) file. 
 
-| Agent | Local Path | Hub Target |
-|---|---|---|
-| Claude | `~/.claude/skills/` | `Hub/skills/` |
-| Claude | `~/.claude/config/` | `Hub/config/` |
-| Codex | `~/.codex/skills/` | `Hub/skills/` |
-| Codex | `~/.codex/config/` | `Hub/config/` |
-| Cursor | `~/.cursor/skills/` | `Hub/skills/` |
-| Cursor | `~/.cursorrules` | `Hub/config/CLAUDE.md` |
-| Antigravity | `~/.gemini/antigravity/skills/` | `Hub/skills/` |
-| Windsurf | `~/.codeium/windsurf/skills/` | `Hub/skills/` |
-| Qoder | `~/.qoder/skills/` | `Hub/skills/` |
+Currently supported tools out-of-the-box include:
+* **Claude Desktop**
+* **Cursor** (including `.cursorrules`)
+* **Windsurf**
+* **Codex**
+* **Qoder**
+* **Antigravity**
 
 > If an agent isn't installed on your machine, it's automatically skipped.
 
