@@ -148,6 +148,12 @@ To re-link everything to the Hub later, just run `sync.sh` / `sync.ps1` again.
 
 ## FAQ
 
+**Q: How will I know if it's working?**
+If you're using Claude Code, for example...
+1. go to your Terminal > type `claude` to get into Claude Code > then type `list all available skills` and it should list them for you.
+2. *Then,* `exit` Claude Code, run this script (see instructions, above), get back into Claude Code, and type `list all available skills` again... and the same skills should be there.
+3. *Then,* go to `~/.claude/skills` and see if that's a *symlink* to your Hub location and that your skills are found there. (NOTE: this script only manages global/user-level skills, not project-level ones.)
+
 **Q: Will this delete my existing skills?**
 No. Any existing folders or files are renamed to `.backup_TIMESTAMP` before a symlink is created. You can always find them right next to the original path. The script also offers to merge your scattered skills into the Hub before syncing. After a successful sync, you'll be asked if you want to clean up old backups.
 
