@@ -23,7 +23,7 @@ Worse, existing sync approaches create regular symlinks that are **easily overwr
 | Dry-run before changes | ❌ YOLO | ✅ Full analysis + confirmation |
 | Clean skill repos | ❌ Cloned repos pollute each other’s git state | ✅ Each repo is an independent sibling |
 | Dependencies | Node.js / npm | **Zero** — native bash & PowerShell |
-| Undo / unlock | Manual googling | ✅ Built-in `unsync` script removes locks and restores originals (if backup exists) |
+| Undo / unlock | Manual googling | ✅ Built-in `unsync` script removes locks and unlinks IDEs |
 
 ### How It Works
 
@@ -131,13 +131,15 @@ chmod +x unsync.sh
 powershell -ExecutionPolicy Bypass -File .\unsync.ps1
 ```
 
-This script safely reverses the sync process:
+This script safely reverses the sync process without losing your new skills:
 1. Removes the immutable OS locks from all symlinks
-2. Checks if a `.backup_*` from the original environment exists nearby
-3. If a backup is found, it restores it
-4. If no backup is found (e.g., if you ran cleanup), it simply removes the symlink so the IDE can generate fresh defaults
+2. Deletes the symlinks to disconnect the IDEs from your Hub
+3. Everything in your Hub is left untouched and safe
+4. Your `.backup_*` folders are left untouched
 
-To re-lock everything later, just run `sync.sh` / `sync.ps1` again.
+Your IDEs will now generate clean, empty folders. If you want to keep the skills you installed while synced, simply copy them from your Hub back into the IDE's local folder.
+
+To re-link everything to the Hub later, just run `sync.sh` / `sync.ps1` again.
 
 ## FAQ
 

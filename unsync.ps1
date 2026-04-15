@@ -28,7 +28,8 @@ foreach ($localPath in $knownPaths) {
         $isLink = ($item.Attributes -match "ReparsePoint")
         if ($isLink) {
             icacls $localPath /remove:d Everyone > $null 2>&1
-            Write-Host " [UNLOCKED] $localPath" -ForegroundColor Green
+            cmd /c rmdir "$localPath"
+            Write-Host " [UNLINKED] $localPath" -ForegroundColor Green
             $unlocked++
         }
     }
@@ -38,7 +39,9 @@ if ($unlocked -eq 0) {
     Write-Host "No locked junctions found. Nothing to do."
 } else {
     Write-Host ""
-    Write-Host "Unlocked $unlocked junction(s)." -ForegroundColor Green
-    Write-Host "You can now safely delete or modify them manually."
-    Write-Host "To re-lock, just run sync.ps1 again."
+    Write-Host "`u{2713} Unlinked $unlocked IDE(s)." -ForegroundColor Green
+    Write-Host "Your IDEs are now disconnected and will use their own default skill folders."
+    Write-Host ""
+    Write-Host "Your skills are safe! They were left exactly as they are in your Hub."
+    Write-Host "If you want to manually move them back to a specific IDE, copy them from the Hub."
 }

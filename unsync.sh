@@ -38,7 +38,8 @@ for LOCAL_PATH in "${KNOWN_PATHS[@]}"; do
         elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
             sudo chattr -i "$LOCAL_PATH" 2>/dev/null || true
         fi
-        echo -e " ${GREEN}[UNLOCKED]${RESET} $LOCAL_PATH"
+        rm "$LOCAL_PATH"
+        echo -e " ${GREEN}[UNLINKED]${RESET} $LOCAL_PATH"
         UNLOCKED=$((UNLOCKED + 1))
     fi
 done
@@ -47,7 +48,9 @@ if [ $UNLOCKED -eq 0 ]; then
     echo "No locked symlinks found. Nothing to do."
 else
     echo ""
-    echo -e "${GREEN}${BOLD}✓ Unlocked $UNLOCKED symlink(s).${RESET}"
-    echo "You can now safely delete or modify them manually."
-    echo "To re-lock, just run ./sync.sh again."
+    echo -e "${GREEN}${BOLD}✓ Unlinked $UNLOCKED IDE(s).${RESET}"
+    echo "Your IDEs are now disconnected and will use their own default skill folders."
+    echo ""
+    echo "Your skills are safe! They were left exactly as they are in your Hub."
+    echo "If you want to manually move them back to a specific IDE, copy them from the Hub."
 fi
