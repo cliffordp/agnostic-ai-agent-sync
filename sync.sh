@@ -158,7 +158,7 @@ cmd_status() {
         PARENT_DIR=$(dirname "$LOCAL_PATH")
         BASENAME=$(basename "$LOCAL_PATH")
 
-        # Skip if IDE not installed
+        # Skip if tool not installed
         if [ ! -d "$PARENT_DIR" ]; then
             continue
         fi
@@ -221,7 +221,7 @@ select_hub() {
     CURRENT_DIR=$(pwd)
 
     echo "Your Hub is the single folder where all your AI agent skills and"
-    echo "config will live. Every IDE gets symlinked to it."
+    echo "config will live. Every AI coding tool gets symlinked to it."
     echo ""
     echo -e "Current directory: ${BOLD}$CURRENT_DIR${RESET}"
     echo ""
@@ -423,7 +423,7 @@ cmd_sync() {
         TARGET=$(resolve_target "$HUB_SUB")
         PARENT_DIR=$(dirname "$LOCAL_PATH")
 
-        # Skip if the parent IDE directory doesn't exist (agent not installed)
+        # Skip if the parent tool directory doesn't exist (agent not installed)
         if [ ! -d "$PARENT_DIR" ]; then
             SKIPPED=$((SKIPPED + 1))
             continue
@@ -469,7 +469,7 @@ cmd_sync() {
     if [ ${#PLAN_DISPLAY[@]} -eq 0 ]; then
         echo ""
         echo "No supported AI agent directories were found on this machine."
-        echo "(Skipped $SKIPPED paths where the parent IDE is not installed.)"
+        echo "(Skipped $SKIPPED paths where the parent tool is not installed.)"
         exit 0
     fi
 
@@ -480,7 +480,7 @@ cmd_sync() {
 
     if [ $SKIPPED -gt 0 ]; then
         echo ""
-        echo -e "  ${DIM}($SKIPPED agent paths skipped — those IDEs are not installed.)${RESET}"
+        echo -e "  ${DIM}($SKIPPED agent paths skipped — those tools are not installed.)${RESET}"
     fi
 
     if [ $ERRORS -gt 0 ]; then

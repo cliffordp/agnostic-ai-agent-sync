@@ -71,7 +71,7 @@ if [ ${#LINKS_TO_REMOVE[@]} -eq 0 ]; then
     exit 0
 fi
 
-echo -e "${CYAN}${BOLD}The following IDE config paths will be disconnected from the Hub:${RESET}"
+echo -e "${CYAN}${BOLD}The following AI coding tool config paths will be disconnected from the Hub:${RESET}"
 for link in "${LINKS_TO_REMOVE[@]}"; do
     TARGET=$(readlink "$link" || echo "unknown")
     echo "  - $link -> $TARGET"
@@ -81,7 +81,7 @@ echo ""
 echo -e "${YELLOW}Warning: This will delete these symlinks and break the connection to your Hub.${RESET}"
 echo "Your skills inside the Hub will be completely untouched."
 echo ""
-read -p "Are you sure you want to unsync these IDEs? (y/N): " confirm
+read -p "Are you sure you want to unsync these tools? (y/N): " confirm
 
 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
     echo "Aborted. Nothing was changed."
@@ -106,9 +106,9 @@ if [ $UNLOCKED -eq 0 ]; then
     echo "No locked symlinks found. Nothing to do."
 else
     echo ""
-    echo -e "${GREEN}${BOLD}✓ Unlinked $UNLOCKED IDE(s).${RESET}"
-    echo "Your IDEs are now disconnected and will use their own default skill folders."
+    echo -e "${GREEN}${BOLD}✓ Unlinked $UNLOCKED tool(s).${RESET}"
+    echo "Your AI coding tools are now disconnected and will use their own default skill folders."
     echo ""
     echo "Your skills are safe! They were left exactly as they are in your Hub."
-    echo "If you want to manually move them back to a specific IDE, copy them from the Hub."
+    echo "If you want to manually move them back to a specific tool, copy them from the Hub."
 fi

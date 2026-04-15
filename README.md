@@ -8,22 +8,22 @@ Dependency-free, with OS-level immutable symlinks — protected from being accid
 
 Using multiple AI coding tools means your custom instructions end up scattered across `~/.cursorrules`, `~/.claude/skills/`, `~/.codex/config/`, etc. Updating one meant manually copy-pasting to all the others — and inevitably forgetting one.
 
-Worse, existing sync approaches create regular symlinks that are **easily overwritten** by IDE software updates, `git checkout` resets, or environment re-initialization. One bad update and your entire symlinked skill library vanishes.
+Worse, existing sync approaches create regular symlinks that are **easily overwritten** by software updates, `git checkout` resets, or environment re-initialization. One bad update and your entire symlinked skill library vanishes.
 
 ## The Solution
 
-**Agnostic AI Agent Sync** creates symlinks from each IDE's config location to a single "Hub" folder you control, then **locks them at the OS level** so nothing can silently delete them (like a new `git clone` command for that slick new Skill).
+**Agnostic AI Agent Sync** creates symlinks from each AI coding tool's config location to a single "Hub" folder you control, then **locks them at the OS level** so nothing can silently delete them (like a new `git clone` command for that slick new Skill).
 
 ### Why This Is Different
 
 | Feature | Generic symlinks / npm tools | Agnostic AI Agent Sync |
 |---|---|---|
-| Survives IDE updates | ❌ Silently deleted | ✅ OS-level immutable lock |
+| Survives app updates | ❌ Silently deleted | ✅ OS-level immutable lock |
 | Maps `.cursorrules` ↔ `CLAUDE.md` | ❌ Manual | ✅ Automatic |
 | Dry-run before changes | ❌ YOLO | ✅ Full analysis + confirmation |
 | Clean skill repos | ❌ Cloned repos pollute each other’s git state | ✅ Each repo is an independent sibling |
 | Dependencies | Node.js / npm | **Zero** — native bash & PowerShell |
-| Undo / unlock | Manual googling | ✅ Built-in `unsync` script removes locks and unlinks IDEs |
+| Undo / unlock | Manual googling | ✅ Built-in `unsync` script removes locks and unlinks tools |
 
 ### How It Works
 
@@ -71,7 +71,7 @@ powershell -ExecutionPolicy Bypass -File .\sync.ps1
 
 The script will:
 1. Ask where your Hub is (or help you create one)
-2. Auto-detect and offer to merge any existing skill files scattered across your IDEs
+2. Auto-detect and offer to merge any existing skill files scattered across your local tools
 3. Scan your system for installed AI agents
 4. Show you exactly what it plans to do
 5. Wait for you to type `y` before touching anything
@@ -129,11 +129,11 @@ powershell -ExecutionPolicy Bypass -File .\unsync.ps1
 
 This script safely reverses the sync process without losing your new skills:
 1. Removes the immutable OS locks from all symlinks
-2. Deletes the symlinks to disconnect the IDEs from your Hub
+2. Deletes the symlinks to disconnect the local tools from your Hub
 3. Everything in your Hub is left untouched and safe
 4. Your `.backup_*` folders are left untouched
 
-Your IDEs will now generate clean, empty folders. If you want to keep the skills you installed while synced, simply copy them from your Hub back into the IDE's local folder.
+Your AI coding tools will now generate clean, empty folders. If you want to keep the skills you installed while synced, simply copy them from your Hub back into the tool's local folder.
 
 To re-link everything to the Hub later, just run `sync.sh` / `sync.ps1` again.
 
@@ -148,11 +148,11 @@ The script offers to clean them up automatically after each sync. If you skipped
 **Q: Do I have to answer the Hub wizard every time?**
 No. After the first run, your Hub path is saved to `~/.agnostic-ai-agent-sync`. Future runs remember it automatically and skip straight to the analysis.
 
-**Q: What if I install a new IDE later?**
+**Q: What if I install a new AI coding tool later?**
 Just re-run `./sync.sh`. It auto-detects newly installed agents and offers to wire them up. Already-synced agents are left untouched.
 
-**Q: What if a brand new AI IDE hits the market? Will I need to download a new script?**
-No! The sync scripts are dynamic. Upon launch, they silently parse the `agents.map` file hosted directly on this GitHub repository. When we add support for a new IDE to the map, your local script will automatically support it the very next time you run it.
+**Q: What if a brand new AI coding tool hits the market? Will I need to download a new script?**
+No! The sync scripts are dynamic. Upon launch, they silently parse the `agents.map` file hosted directly on this GitHub repository. When we add support for a new tool to the map, your local script will automatically support it the very next time you run it.
 
 **Q: How do I install new skills after syncing?**
 Navigate to your Hub's `skills/` folder (or any synced path like `~/.claude/skills/` — they all point to the same place) and install normally. For example:
@@ -162,7 +162,7 @@ cd ~/.claude/skills/
 git clone https://github.com/cliffordp/claude-skills
 ```
 
-The new skill instantly appears in every synced IDE. The immutable lock protects the symlink itself from being deleted — but writing inside the directory works normally.
+The new skill instantly appears in every synced tool. The immutable lock protects the symlink itself from being deleted — but writing inside the directory works normally.
 
 **Q: What if a symlink already points to the right place?**
 The script detects this, skips re-creation, and just verifies the lock is applied. It's safe to run repeatedly.
@@ -185,10 +185,10 @@ Two folders: `skills/` (your reusable SKILL.md files, prompt libraries, etc.) an
 **Q: What about per-project rules like `.cursorrules` in a repo?**
 This tool only manages **global** (user-level) config. Per-project files inside your repositories (`.cursorrules`, `.claude/`, `.windsurf/rules/`) are untouched and work as normal alongside these global symlinks.
 
-**Q: Can I have different skills for different IDEs?**
-Not with this tool — the whole point is a single shared set. If you need IDE-specific skills, manage those manually in per-project directories instead.
+**Q: Can I have different skills for different AI coding tools?**
+Not with this tool — the whole point is a single shared set. If you need tool-specific skills, manage those manually in per-project directories instead.
 
-**Q: My IDE just updated and something seems broken. What do I do?**
+**Q: My AI coding tool just updated and something seems broken. What do I do?**
 Run `./sync.sh status` to check if the symlinks are still intact. If the lock held (which it should), you'll see all green. If something got overwritten, re-run `./sync.sh` to repair it.
 
 **Q: How do I add support for a new AI agent?**
@@ -201,7 +201,7 @@ No. Once you have the script files on your machine, everything runs locally. No 
 Not currently. Because this tool relies on local script execution to detect your home directory (`~/.claude`, etc.) and manages state via a saved `~/.agnostic-ai-agent-sync` config, dropping it into the `/usr/local/bin` / `/opt/homebrew` `$PATH` as a global executable isn't supported yet. The recommended approach is to keep the script in a dedicated directory (like `~/Documents/scripts/` or `~/GitHub/agent-sync/`).
 
 **Q: Why is a Hub better than cloning skill repos directly into `~/.claude/skills/`?**
-Without a Hub, cloning multiple skill repos into a single IDE directory (like `~/.claude/skills/`) mixes them together on disk. Running `git status` inside one repo shows the others as untracked files, requiring constant `.gitignore` maintenance. With a Hub, each skill repo is cloned as an independent sibling directory — clean `git status`, no `.gitignore` games, and every repo can be updated or removed without touching the others. See [claude-skills](https://github.com/cliffordp/claude-skills) for a curated collection that follows this pattern.
+Without a Hub, cloning multiple skill repos into a single agent directory (like `~/.claude/skills/`) mixes them together on disk. Running `git status` inside one repo shows the others as untracked files, requiring constant `.gitignore` maintenance. With a Hub, each skill repo is cloned as an independent sibling directory — clean `git status`, no `.gitignore` games, and every repo can be updated or removed without touching the others. See [claude-skills](https://github.com/cliffordp/claude-skills) for a curated collection that follows this pattern.
 
 ## License
 

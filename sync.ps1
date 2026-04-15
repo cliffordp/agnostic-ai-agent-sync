@@ -155,7 +155,7 @@ function Select-Hub {
     $currentDir = (Get-Location).Path
 
     Write-Host "Your Hub is the single folder where all your AI agent skills and"
-    Write-Host "config will live. Every IDE gets symlinked to it."
+    Write-Host "config will live. Every AI coding tool gets symlinked to it."
     Write-Host ""
     Write-Host "Current directory: $currentDir" -ForegroundColor White
     Write-Host ""

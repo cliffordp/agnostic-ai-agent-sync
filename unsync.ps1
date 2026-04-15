@@ -65,7 +65,7 @@ if ($linksToRemove.Count -eq 0) {
     exit
 }
 
-Write-Host "The following IDE config paths will be disconnected from the Hub:" -ForegroundColor Cyan
+Write-Host "The following AI coding tool config paths will be disconnected from the Hub:" -ForegroundColor Cyan
 foreach ($link in $linksToRemove) {
     $target = $link.Target
     Write-Host "  - $($link.FullName) -> $target"
@@ -75,7 +75,7 @@ Write-Host ""
 Write-Host "Warning: This will delete these junctions and break the connection to your Hub." -ForegroundColor Yellow
 Write-Host "Your skills inside the Hub will be completely untouched."
 Write-Host ""
-$confirm = Read-Host "Are you sure you want to unsync these IDEs? (y/N)"
+$confirm = Read-Host "Are you sure you want to unsync these tools? (y/N)"
 
 if ($confirm -notmatch "^[Yy]$") {
     Write-Host "Aborted. Nothing was changed."
@@ -97,9 +97,9 @@ if ($unlocked -eq 0) {
     Write-Host "No locked junctions found. Nothing to do."
 } else {
     Write-Host ""
-    Write-Host "`u{2713} Unlinked $unlocked IDE(s)." -ForegroundColor Green
-    Write-Host "Your IDEs are now disconnected and will use their own default skill folders."
+    Write-Host "`u{2713} Unlinked $unlocked tool(s)." -ForegroundColor Green
+    Write-Host "Your AI coding tools are now disconnected and will use their own default skill folders."
     Write-Host ""
     Write-Host "Your skills are safe! They were left exactly as they are in your Hub."
-    Write-Host "If you want to manually move them back to a specific IDE, copy them from the Hub."
+    Write-Host "If you want to manually move them back to a specific tool, copy them from the Hub."
 }
