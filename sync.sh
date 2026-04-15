@@ -20,17 +20,39 @@ VERSION="1.0.0"
 # Format: LOCAL_PATH|HUB_SUBFOLDER
 # HUB_SUBFOLDER is relative to the Hub path
 build_agent_map() {
-    AGENT_MAP=(
-        "$HOME/.claude/skills|skills"
-        "$HOME/.claude/config|config"
-        "$HOME/.codex/skills|skills"
-        "$HOME/.codex/config|config"
-        "$HOME/.cursor/skills|skills"
-        "$HOME/.cursorrules|config/CLAUDE.md"
-        "$HOME/.gemini/antigravity/skills|skills"
-        "$HOME/.codeium/windsurf/skills|skills"
-        "$HOME/.qoder/skills|skills"
-    )
+    AGENT_MAP=()
+    REMOTE_URL="https://raw.githubusercontent.com/cliffordp/agnostic-ai-agent-sync/main/agents.map"
+    MAP_CONTENT=""
+
+    if command -v curl &> /dev/null; then
+        MAP_CONTENT=$(curl -sL --max-time 2 "$REMOTE_URL" 2>/dev/null || echo "")
+    fi
+
+    # Fallback if curl failed or machine is offline
+    if [ -z "$MAP_CONTENT" ]; then
+        MAP_CONTENT=$(cat << 'EOF'
+UNIX|$HOME/.claude/skills|skills
+UNIX|$HOME/.claude/config|config
+UNIX|$HOME/.codex/skills|skills
+UNIX|$HOME/.codex/config|config
+UNIX|$HOME/.cursor/skills|skills
+UNIX|$HOME/.cursorrules|config/CLAUDE.md
+UNIX|$HOME/.gemini/antigravity/skills|skills
+UNIX|$HOME/.codeium/windsurf/skills|skills
+UNIX|$HOME/.qoder/skills|skills
+EOF
+)
+    fi
+
+    while IFS= read -r line; do
+        [[ -z "$line" || "$line" =~ ^# ]] && continue
+        
+        if [[ "$line" == UNIX\|* ]]; then
+            PATTERN="${line#UNIX|}"
+            PATTERN="${PATTERN/\$HOME/$HOME}"
+            AGENT_MAP+=("$PATTERN")
+        fi
+    done <<< "$MAP_CONTENT"
 }
 
 # ─── Not supported (intentionally excluded) ──────────────────────

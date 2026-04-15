@@ -7,17 +7,39 @@ $userProfile = $env:USERPROFILE
 
 # ─── Agent mapping ───────────────────────────────────────────────
 function Get-AgentMap {
-    return @(
-        "$userProfile\.claude\skills|skills",
-        "$userProfile\.claude\config|config",
-        "$userProfile\.codex\skills|skills",
-        "$userProfile\.codex\config|config",
-        "$userProfile\.cursor\skills|skills",
-        "$userProfile\.cursorrules|config\CLAUDE.md",
-        "$userProfile\.gemini\antigravity\skills|skills",
-        "$userProfile\.codeium\windsurf\skills|skills",
-        "$userProfile\.qoder\skills|skills"
-    )
+    $remoteUrl = "https://raw.githubusercontent.com/cliffordp/agnostic-ai-agent-sync/main/agents.map"
+    $mapContent = ""
+    
+    try {
+        $mapContent = Invoke-RestMethod -Uri $remoteUrl -TimeoutSec 2 -ErrorAction Stop
+    } catch {
+        $mapContent = @"
+WIN|`$userProfile\.claude\skills|skills
+WIN|`$userProfile\.claude\config|config
+WIN|`$userProfile\.codex\skills|skills
+WIN|`$userProfile\.codex\config|config
+WIN|`$userProfile\.cursor\skills|skills
+WIN|`$userProfile\.cursorrules|config\CLAUDE.md
+WIN|`$userProfile\.gemini\antigravity\skills|skills
+WIN|`$userProfile\.codeium\windsurf\skills|skills
+WIN|`$userProfile\.qoder\skills|skills
+"@
+    }
+
+    $agentMap = @()
+    $lines = $mapContent -split "`n"
+    foreach ($line in $lines) {
+        $line = $line.Trim()
+        if ([string]::IsNullOrEmpty($line) -or $line.StartsWith("#")) { continue }
+        
+        if ($line.StartsWith("WIN|")) {
+            $pattern = $line.Substring(4)
+            $pattern = $pattern -replace '\$userProfile', $userProfile
+            $agentMap += $pattern
+        }
+    }
+    
+    return $agentMap
 }
 
 # ─── Not supported (intentionally excluded) ──────────────────────

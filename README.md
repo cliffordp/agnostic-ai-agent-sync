@@ -155,6 +155,9 @@ No. After the first run, your Hub path is saved to `~/.agnostic-ai-agent-sync`. 
 **Q: What if I install a new IDE later?**
 Just re-run `./sync.sh`. It auto-detects newly installed agents and offers to wire them up. Already-synced agents are left untouched.
 
+**Q: What if a brand new AI IDE hits the market? Will I need to download a new script?**
+No! The sync scripts are dynamic. Upon launch, they silently parse the `agents.map` file hosted directly on this GitHub repository. When we add support for a new IDE to the map, your local script will automatically support it the very next time you run it.
+
 **Q: How do I install new skills after syncing?**
 Navigate to your Hub's `skills/` folder (or any synced path like `~/.claude/skills/` — they all point to the same place) and install normally. For example:
 

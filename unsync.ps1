@@ -8,17 +8,45 @@ Write-Host "==============================================="
 Write-Host ""
 
 $userProfile = $env:USERPROFILE
-$knownPaths = @(
-    "$userProfile\.claude\skills",
-    "$userProfile\.claude\config",
-    "$userProfile\.codex\skills",
-    "$userProfile\.codex\config",
-    "$userProfile\.cursor\skills",
-    "$userProfile\.gemini\antigravity\skills",
-    "$userProfile\.codeium\windsurf\skills",
-    "$userProfile\.qoder\skills",
-    "$userProfile\.cursorrules"
-)
+
+function Get-KnownPaths {
+    $remoteUrl = "https://raw.githubusercontent.com/cliffordp/agnostic-ai-agent-sync/main/agents.map"
+    $mapContent = ""
+    
+    try {
+        $mapContent = Invoke-RestMethod -Uri $remoteUrl -TimeoutSec 2 -ErrorAction Stop
+    } catch {
+        $mapContent = @"
+WIN|`$userProfile\.claude\skills|skills
+WIN|`$userProfile\.claude\config|config
+WIN|`$userProfile\.codex\skills|skills
+WIN|`$userProfile\.codex\config|config
+WIN|`$userProfile\.cursor\skills|skills
+WIN|`$userProfile\.cursorrules|config\CLAUDE.md
+WIN|`$userProfile\.gemini\antigravity\skills|skills
+WIN|`$userProfile\.codeium\windsurf\skills|skills
+WIN|`$userProfile\.qoder\skills|skills
+"@
+    }
+
+    $paths = @()
+    $lines = $mapContent -split "`n"
+    foreach ($line in $lines) {
+        $line = $line.Trim()
+        if ([string]::IsNullOrEmpty($line) -or $line.StartsWith("#")) { continue }
+        
+        if ($line.StartsWith("WIN|")) {
+            $pattern = $line.Substring(4)
+            $localPath = ($pattern -split "\|")[0]
+            $localPath = $localPath -replace '\$userProfile', $userProfile
+            $paths += $localPath
+        }
+    }
+    
+    return $paths
+}
+
+$knownPaths = Get-KnownPaths
 
 $linksToRemove = @()
 

@@ -1,0 +1,25 @@
+# Agnostic AI Agent Sync - Remote IDE Manifest
+# Learn more: https://github.com/cliffordp/agnostic-ai-agent-sync
+# Format: OS|LOCAL_{HOME_VAR}_PATH|HUB_SUBFOLDER
+
+# UNIX PATTERNS
+UNIX|$HOME/.claude/skills|skills
+UNIX|$HOME/.claude/config|config
+UNIX|$HOME/.codex/skills|skills
+UNIX|$HOME/.codex/config|config
+UNIX|$HOME/.cursor/skills|skills
+UNIX|$HOME/.cursorrules|config/CLAUDE.md
+UNIX|$HOME/.gemini/antigravity/skills|skills
+UNIX|$HOME/.codeium/windsurf/skills|skills
+UNIX|$HOME/.qoder/skills|skills
+
+# WINDOWS PATTERNS
+WIN|$userProfile\.claude\skills|skills
+WIN|$userProfile\.claude\config|config
+WIN|$userProfile\.codex\skills|skills
+WIN|$userProfile\.codex\config|config
+WIN|$userProfile\.cursor\skills|skills
+WIN|$userProfile\.cursorrules|config\CLAUDE.md
+WIN|$userProfile\.gemini\antigravity\skills|skills
+WIN|$userProfile\.codeium\windsurf\skills|skills
+WIN|$userProfile\.qoder\skills|skills

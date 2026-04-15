@@ -17,17 +17,44 @@ echo "  Agnostic AI Agent Sync — Unlock / Unsync"
 echo "==============================================="
 echo ""
 
-declare -a KNOWN_PATHS=(
-    "$HOME/.claude/skills"
-    "$HOME/.claude/config"
-    "$HOME/.codex/skills"
-    "$HOME/.codex/config"
-    "$HOME/.cursor/skills"
-    "$HOME/.cursorrules"
-    "$HOME/.gemini/antigravity/skills"
-    "$HOME/.codeium/windsurf/skills"
-    "$HOME/.qoder/skills"
+declare -a KNOWN_PATHS=()
+
+build_known_paths() {
+    REMOTE_URL="https://raw.githubusercontent.com/cliffordp/agnostic-ai-agent-sync/main/agents.map"
+    MAP_CONTENT=""
+
+    if command -v curl &> /dev/null; then
+        MAP_CONTENT=$(curl -sL --max-time 2 "$REMOTE_URL" 2>/dev/null || echo "")
+    fi
+
+    if [ -z "$MAP_CONTENT" ]; then
+        MAP_CONTENT=$(cat << 'EOF'
+UNIX|$HOME/.claude/skills|skills
+UNIX|$HOME/.claude/config|config
+UNIX|$HOME/.codex/skills|skills
+UNIX|$HOME/.codex/config|config
+UNIX|$HOME/.cursor/skills|skills
+UNIX|$HOME/.cursorrules|config/CLAUDE.md
+UNIX|$HOME/.gemini/antigravity/skills|skills
+UNIX|$HOME/.codeium/windsurf/skills|skills
+UNIX|$HOME/.qoder/skills|skills
+EOF
 )
+    fi
+
+    while IFS= read -r line; do
+        [[ -z "$line" || "$line" =~ ^# ]] && continue
+        
+        if [[ "$line" == UNIX\|* ]]; then
+            PATTERN="${line#UNIX|}"
+            LOCAL_PATH="${PATTERN%%|*}" # Extract everything before the first pipe (hub target)
+            LOCAL_PATH="${LOCAL_PATH/\$HOME/$HOME}"
+            KNOWN_PATHS+=("$LOCAL_PATH")
+        fi
+    done <<< "$MAP_CONTENT"
+}
+
+build_known_paths
 
 declare -a LINKS_TO_REMOVE=()
 
