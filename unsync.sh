@@ -24,7 +24,7 @@ build_known_paths() {
     MAP_CONTENT=""
 
     if command -v curl &> /dev/null; then
-        MAP_CONTENT=$(curl -sL --max-time 2 "$REMOTE_URL" 2>/dev/null || echo "")
+        MAP_CONTENT=$(curl -sfL --max-time 2 "$REMOTE_URL" 2>/dev/null || echo "")
     fi
 
     if [ -z "$MAP_CONTENT" ]; then
