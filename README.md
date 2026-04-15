@@ -8,7 +8,7 @@ Dependency-free, with OS-level immutable symlinks — protected from being accid
 
 Using multiple AI coding tools means your custom instructions end up scattered across `~/.cursorrules`, `~/.claude/skills/`, `~/.codex/config/`, etc. Updating one meant manually copy-pasting to all the others — and inevitably forgetting one.
 
-Worse, existing sync approaches create regular symlinks that are **trivially destroyed** by IDE software updates, `git checkout` resets, or environment re-initialization. One bad update and your entire symlinked skill library vanishes.
+Worse, existing sync approaches create regular symlinks that are **easily overwritten** by IDE software updates, `git checkout` resets, or environment re-initialization. One bad update and your entire symlinked skill library vanishes.
 
 ## The Solution
 
@@ -23,7 +23,7 @@ Worse, existing sync approaches create regular symlinks that are **trivially des
 | Dry-run before changes | ❌ YOLO | ✅ Full analysis + confirmation |
 | Clean skill repos | ❌ Cloned repos pollute each other’s git state | ✅ Each repo is an independent sibling |
 | Dependencies | Node.js / npm | **Zero** — native bash & PowerShell |
-| Undo / unlock | Manual googling | ✅ Built-in `unsync` script |
+| Undo / unlock | Manual googling | ✅ Built-in `unsync` script removes locks and restores originals (if backup exists) |
 
 ### How It Works
 
@@ -79,7 +79,7 @@ The script will:
 > **Re-running is safe.** The script remembers your Hub path (saved to `~/.agnostic-sync`). Subsequent runs skip the wizard and go straight to analysis.
 
 ### Step 3: Check status (anytime)
-
+Run this from wherever you downloaded or cloned the script:
 ```bash
 ./sync.sh status
 ```
@@ -131,7 +131,13 @@ chmod +x unsync.sh
 powershell -ExecutionPolicy Bypass -File .\unsync.ps1
 ```
 
-This removes the immutable lock so you can safely delete or replace the symlinks. To re-lock everything, just run `sync.sh` / `sync.ps1` again.
+This script safely reverses the sync process:
+1. Removes the immutable OS locks from all symlinks
+2. Checks if a `.backup_*` from the original environment exists nearby
+3. If a backup is found, it restores it
+4. If no backup is found (e.g., if you ran cleanup), it simply removes the symlink so the IDE can generate fresh defaults
+
+To re-lock everything later, just run `sync.sh` / `sync.ps1` again.
 
 ## FAQ
 
@@ -189,6 +195,9 @@ Open `sync.sh` (or `sync.ps1`), find the `AGENT_MAP` array, and add a new line f
 
 **Q: Does running the sync script require an internet connection?**
 No. Once you have the script files on your machine, everything runs locally. No web requests, no telemetry, no dependencies.
+
+**Q: Can I install this via Homebrew?**
+Not currently. Because this tool relies on local script execution to detect your home directory (`~/.claude`, etc.) and manages state via a saved `~/.agnostic-sync` config, dropping it into the `/usr/local/bin` / `/opt/homebrew` `$PATH` as a global executable isn't supported yet. The recommended approach is to keep the script in a dedicated directory (like `~/Documents/scripts/` or `~/GitHub/agent-sync/`).
 
 **Q: Why is a Hub better than cloning skill repos directly into `~/.claude/skills/`?**
 Without a Hub, cloning multiple skill repos into a single IDE directory (like `~/.claude/skills/`) mixes them together on disk. Running `git status` inside one repo shows the others as untracked files, requiring constant `.gitignore` maintenance. With a Hub, each skill repo is cloned as an independent sibling directory — clean `git status`, no `.gitignore` games, and every repo can be updated or removed without touching the others. See [claude-skills](https://github.com/cliffordp/claude-skills) for a curated collection that follows this pattern.
