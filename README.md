@@ -21,6 +21,7 @@ Worse, existing sync approaches create regular symlinks that are **trivially des
 | Survives IDE updates | ❌ Silently deleted | ✅ OS-level immutable lock |
 | Maps `.cursorrules` ↔ `CLAUDE.md` | ❌ Manual | ✅ Automatic |
 | Dry-run before changes | ❌ YOLO | ✅ Full analysis + confirmation |
+| Clean skill repos | ❌ Cloned repos pollute each other’s git state | ✅ Each repo is an independent sibling |
 | Dependencies | Node.js / npm | **Zero** — native bash & PowerShell |
 | Undo / unlock | Manual googling | ✅ Built-in `unsync` script |
 
@@ -188,6 +189,9 @@ Open `sync.sh` (or `sync.ps1`), find the `AGENT_MAP` array, and add a new line f
 
 **Q: Does running the sync script require an internet connection?**
 No. Once you have the script files on your machine, everything runs locally. No web requests, no telemetry, no dependencies.
+
+**Q: Why is a Hub better than cloning skill repos directly into `~/.claude/skills/`?**
+Without a Hub, cloning multiple skill repos into a single IDE directory (like `~/.claude/skills/`) mixes them together on disk. Running `git status` inside one repo shows the others as untracked files, requiring constant `.gitignore` maintenance. With a Hub, each skill repo is cloned as an independent sibling directory — clean `git status`, no `.gitignore` games, and every repo can be updated or removed without touching the others. See [claude-skills](https://github.com/cliffordp/claude-skills) for a curated collection that follows this pattern.
 
 ## License
 
