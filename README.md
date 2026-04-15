@@ -207,10 +207,10 @@ Not with this tool — the whole point is a single shared set. If you need tool-
 Run `./sync.sh status` to check if the symlinks are still intact. If the lock held (which it should), you'll see all green. If something got overwritten, re-run `./sync.sh` to repair it.
 
 **Q: How do I add support for a new AI agent?**
-Open `sync.sh` (or `sync.ps1`), find the `AGENT_MAP` array, and add a new line following the `LOCAL_PATH|HUB_SUBFOLDER` pattern. PRs welcome!
+Open the `agents.map` file in this repository and add a new line following the pattern. PRs welcome! Because the scripts fetch this file dynamically, your pull request will instantly distribute support for the new tool to all users without them needing to re-download the script.
 
 **Q: Does running the sync script require an internet connection?**
-No. Once you have the script files on your machine, everything runs locally. No web requests, no telemetry, no dependencies.
+No. The script silently attempts a 2-second fetch of `agents.map` from GitHub to grab the latest supported tool paths, but if you are offline, it instantly falls back to a hardcoded offline list. Zero telemetry, and zero mandatory dependencies.
 
 **Q: Can I install this via Homebrew?**
 Not currently. Because this tool relies on local script execution to detect your home directory (`~/.claude`, etc.) and manages state via a saved `~/.agnostic-ai-agent-sync` config, dropping it into the `/usr/local/bin` / `/opt/homebrew` `$PATH` as a global executable isn't supported yet. The recommended approach is to keep the script in a dedicated directory (like `~/Documents/scripts/` or `~/GitHub/agent-sync/`).
