@@ -32,7 +32,7 @@ WIN|`$userProfile\.qoder\skills|skills
     $paths = @()
     $lines = $mapContent -split "`n"
     foreach ($line in $lines) {
-        $line = $line.Trim()
+        $line = $line.Trim() -replace "`r", ""
         if ([string]::IsNullOrEmpty($line) -or $line.StartsWith("#")) { continue }
         
         if ($line.StartsWith("WIN|")) {

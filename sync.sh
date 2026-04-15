@@ -45,6 +45,8 @@ EOF
     fi
 
     while IFS= read -r line; do
+        # Strip trailing carriage returns cross-platform
+        line="${line%$'\r'}"
         [[ -z "$line" || "$line" =~ ^# ]] && continue
         
         if [[ "$line" == UNIX\|* ]]; then

@@ -1,0 +1,8 @@
+* text=auto
+
+# Enforce LF for bash scripts and map file
+*.sh text eol=lf
+*.map text eol=lf
+
+# Enforce CRLF for PowerShell scripts specifically 
+*.ps1 text eol=crlf
