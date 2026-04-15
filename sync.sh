@@ -13,7 +13,7 @@ BOLD='\033[1m'
 DIM='\033[2m'
 RESET='\033[0m'
 
-CONFIG_FILE="$HOME/.agnostic-sync"
+CONFIG_FILE="$HOME/.agnostic-ai-agent-sync"
 VERSION="1.0.0"
 
 # ─── Agent mapping ───────────────────────────────────────────────

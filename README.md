@@ -76,7 +76,7 @@ The script will:
 4. Show you exactly what it plans to do
 5. Wait for you to type `y` before touching anything
 
-> **Re-running is safe.** The script remembers your Hub path (saved to `~/.agnostic-sync`). Subsequent runs skip the wizard and go straight to analysis.
+> **Re-running is safe.** The script remembers your Hub path (saved to `~/.agnostic-ai-agent-sync`). Subsequent runs skip the wizard and go straight to analysis.
 
 ### Step 3: Check status (anytime)
 Run this from wherever you downloaded or cloned the script:
@@ -150,7 +150,7 @@ No. Any existing folders or files are renamed to `.backup_TIMESTAMP` before a sy
 The script offers to clean them up automatically after each sync. If you skipped that prompt, run `./sync.sh cleanup` (or `.\sync.ps1 cleanup` on Windows) anytime. It lists every backup with its size and asks before deleting anything.
 
 **Q: Do I have to answer the Hub wizard every time?**
-No. After the first run, your Hub path is saved to `~/.agnostic-sync`. Future runs remember it automatically and skip straight to the analysis.
+No. After the first run, your Hub path is saved to `~/.agnostic-ai-agent-sync`. Future runs remember it automatically and skip straight to the analysis.
 
 **Q: What if I install a new IDE later?**
 Just re-run `./sync.sh`. It auto-detects newly installed agents and offers to wire them up. Already-synced agents are left untouched.
@@ -199,7 +199,7 @@ Open `sync.sh` (or `sync.ps1`), find the `AGENT_MAP` array, and add a new line f
 No. Once you have the script files on your machine, everything runs locally. No web requests, no telemetry, no dependencies.
 
 **Q: Can I install this via Homebrew?**
-Not currently. Because this tool relies on local script execution to detect your home directory (`~/.claude`, etc.) and manages state via a saved `~/.agnostic-sync` config, dropping it into the `/usr/local/bin` / `/opt/homebrew` `$PATH` as a global executable isn't supported yet. The recommended approach is to keep the script in a dedicated directory (like `~/Documents/scripts/` or `~/GitHub/agent-sync/`).
+Not currently. Because this tool relies on local script execution to detect your home directory (`~/.claude`, etc.) and manages state via a saved `~/.agnostic-ai-agent-sync` config, dropping it into the `/usr/local/bin` / `/opt/homebrew` `$PATH` as a global executable isn't supported yet. The recommended approach is to keep the script in a dedicated directory (like `~/Documents/scripts/` or `~/GitHub/agent-sync/`).
 
 **Q: Why is a Hub better than cloning skill repos directly into `~/.claude/skills/`?**
 Without a Hub, cloning multiple skill repos into a single IDE directory (like `~/.claude/skills/`) mixes them together on disk. Running `git status` inside one repo shows the others as untracked files, requiring constant `.gitignore` maintenance. With a Hub, each skill repo is cloned as an independent sibling directory — clean `git status`, no `.gitignore` games, and every repo can be updated or removed without touching the others. See [claude-skills](https://github.com/cliffordp/claude-skills) for a curated collection that follows this pattern.

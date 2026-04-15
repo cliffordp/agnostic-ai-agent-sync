@@ -2,7 +2,7 @@
 # https://github.com/cliffordp/agnostic-ai-agent-sync
 
 $Version = "1.0.0"
-$ConfigFile = "$env:USERPROFILE\.agnostic-sync"
+$ConfigFile = "$env:USERPROFILE\.agnostic-ai-agent-sync"
 $userProfile = $env:USERPROFILE
 
 # ─── Agent mapping ───────────────────────────────────────────────
