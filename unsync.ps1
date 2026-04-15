@@ -20,19 +20,49 @@ $knownPaths = @(
     "$userProfile\.cursorrules"
 )
 
-$unlocked = 0
+$linksToRemove = @()
 
 foreach ($localPath in $knownPaths) {
     if (Test-Path -Path $localPath) {
         $item = Get-Item $localPath -Force
         $isLink = ($item.Attributes -match "ReparsePoint")
         if ($isLink) {
-            icacls $localPath /remove:d Everyone > $null 2>&1
-            cmd /c rmdir "$localPath"
-            Write-Host " [UNLINKED] $localPath" -ForegroundColor Green
-            $unlocked++
+            $linksToRemove += $item
         }
     }
+}
+
+if ($linksToRemove.Count -eq 0) {
+    Write-Host "No locked junctions found. Nothing to do."
+    exit
+}
+
+Write-Host "The following IDE config paths will be disconnected from the Hub:" -ForegroundColor Cyan
+foreach ($link in $linksToRemove) {
+    $target = $link.Target
+    Write-Host "  - $($link.FullName) -> $target"
+}
+
+Write-Host ""
+Write-Host "Warning: This will delete these junctions and break the connection to your Hub." -ForegroundColor Yellow
+Write-Host "Your skills inside the Hub will be completely untouched."
+Write-Host ""
+$confirm = Read-Host "Are you sure you want to unsync these IDEs? (y/N)"
+
+if ($confirm -notmatch "^[Yy]$") {
+    Write-Host "Aborted. Nothing was changed."
+    exit
+}
+
+Write-Host ""
+$unlocked = 0
+
+foreach ($link in $linksToRemove) {
+    $localPath = $link.FullName
+    icacls $localPath /remove:d Everyone > $null 2>&1
+    cmd /c rmdir "$localPath"
+    Write-Host " [UNLINKED] $localPath" -ForegroundColor Green
+    $unlocked++
 }
 
 if ($unlocked -eq 0) {

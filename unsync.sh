@@ -29,19 +29,48 @@ declare -a KNOWN_PATHS=(
     "$HOME/.qoder/skills"
 )
 
-UNLOCKED=0
+declare -a LINKS_TO_REMOVE=()
 
 for LOCAL_PATH in "${KNOWN_PATHS[@]}"; do
     if [ -L "$LOCAL_PATH" ]; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            chflags -h nouchg "$LOCAL_PATH" 2>/dev/null || true
-        elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-            sudo chattr -i "$LOCAL_PATH" 2>/dev/null || true
-        fi
-        rm "$LOCAL_PATH"
-        echo -e " ${GREEN}[UNLINKED]${RESET} $LOCAL_PATH"
-        UNLOCKED=$((UNLOCKED + 1))
+        LINKS_TO_REMOVE+=("$LOCAL_PATH")
     fi
+done
+
+if [ ${#LINKS_TO_REMOVE[@]} -eq 0 ]; then
+    echo "No locked symlinks found. Nothing to do."
+    exit 0
+fi
+
+echo -e "${CYAN}${BOLD}The following IDE config paths will be disconnected from the Hub:${RESET}"
+for link in "${LINKS_TO_REMOVE[@]}"; do
+    TARGET=$(readlink "$link" || echo "unknown")
+    echo "  - $link -> $TARGET"
+done
+
+echo ""
+echo -e "${YELLOW}Warning: This will delete these symlinks and break the connection to your Hub.${RESET}"
+echo "Your skills inside the Hub will be completely untouched."
+echo ""
+read -p "Are you sure you want to unsync these IDEs? (y/N): " confirm
+
+if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+    echo "Aborted. Nothing was changed."
+    exit 0
+fi
+
+echo ""
+UNLOCKED=0
+
+for LOCAL_PATH in "${LINKS_TO_REMOVE[@]}"; do
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        chflags -h nouchg "$LOCAL_PATH" 2>/dev/null || true
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        sudo chattr -i "$LOCAL_PATH" 2>/dev/null || true
+    fi
+    rm "$LOCAL_PATH"
+    echo -e " ${GREEN}[UNLINKED]${RESET} $LOCAL_PATH"
+    UNLOCKED=$((UNLOCKED + 1))
 done
 
 if [ $UNLOCKED -eq 0 ]; then
