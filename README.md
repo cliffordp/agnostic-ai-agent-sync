@@ -31,6 +31,15 @@ Worse, existing sync approaches create regular symlinks that are **easily overwr
 2. **Confirm** — Asks for your explicit `y` approval. If you say no, zero files are touched.
 3. **Implement** — Backs up real folders, creates symlinks, and locks them with OS-level immutability (`chflags` on macOS, `chattr` on Linux, `icacls` on Windows).
 
+## Example Screenshots
+
+Ran on Cliff's macOS after he already manually created symlinks (what this script would automatically do for you), indicating that it gracefully works even if you've partially implemented what this script does.
+
+<img width="364" height="116" alt="2026-04-15 sync status" src="https://github.com/user-attachments/assets/8a9c75d9-4098-4b17-a2a8-7a0e35163b80" />
+<img width="762" height="382" alt="2026-04-15 sync 1 of 2" src="https://github.com/user-attachments/assets/3cb8f345-7269-4390-b210-b209a9c46eac" />
+<img width="866" height="314" alt="2026-04-15 sync 2 of 2" src="https://github.com/user-attachments/assets/0c7ef861-82e3-4aa6-add2-3cedff3c3f32" />
+<img width="778" height="312" alt="2026-04-15 sync status after syncing" src="https://github.com/user-attachments/assets/c1557cf8-ce4f-4ae9-8b5f-331778d4675e" />
+
 ## Setup Guide
 
 ### Option A: One-liner (Mac / Linux)
@@ -201,7 +210,7 @@ No. Once you have the script files on your machine, everything runs locally. No 
 Not currently. Because this tool relies on local script execution to detect your home directory (`~/.claude`, etc.) and manages state via a saved `~/.agnostic-ai-agent-sync` config, dropping it into the `/usr/local/bin` / `/opt/homebrew` `$PATH` as a global executable isn't supported yet. The recommended approach is to keep the script in a dedicated directory (like `~/Documents/scripts/` or `~/GitHub/agent-sync/`).
 
 **Q: Why is a Hub better than cloning skill repos directly into `~/.claude/skills/`?**
-Without a Hub, cloning multiple skill repos into a single agent directory (like `~/.claude/skills/`) mixes them together on disk. Running `git status` inside one repo shows the others as untracked files, requiring constant `.gitignore` maintenance. With a Hub, each skill repo is cloned as an independent sibling directory — clean `git status`, no `.gitignore` games, and every repo can be updated or removed without touching the others. See [claude-skills](https://github.com/cliffordp/claude-skills) for a curated collection that follows this pattern.
+Without a Hub, cloning multiple skill repos into a single agent directory (like `~/.claude/skills/`) mixes them together on disk. Running `git status` inside one repo shows the others as untracked files, requiring constant `.gitignore` maintenance. With a Hub, each skill repo is cloned as an independent sibling directory — clean `git status`, no `.gitignore` games, and every repo can be updated or removed without touching the others. See [Cliff's claude-skills repo](https://github.com/cliffordp/claude-skills) for a curated collection that follows this pattern.
 
 ## License
 
@@ -213,4 +222,4 @@ This tool modifies symlinks and file system permissions on your machine. While i
 
 ## Disclosure
 
-This codebase was generated with the assistance of AI coding tools. The human author reviewed the code and tested the tool on macOS but not on Linux or Windows.
+This codebase was generated with the assistance of AI coding tools. You should review the code prior to installing. Cliff tested the tool on macOS but not on Linux or Windows.
