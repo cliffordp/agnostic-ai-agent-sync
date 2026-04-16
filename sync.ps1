@@ -288,14 +288,36 @@ function Merge-ExistingSkills {
 
 # ─── Ensure Hub subdirectories ───────────────────────────────────
 function Ensure-HubDirs {
-    $missingDirs = @()
-    if (-Not (Test-Path "$($script:hubPath)\skills")) { $missingDirs += "skills" }
-    if (-Not (Test-Path "$($script:hubPath)\config")) { $missingDirs += "config" }
+    $agentMap = Get-AgentMap
 
-    if ($missingDirs.Length -gt 0) {
-        foreach ($d in $missingDirs) {
-            New-Item -ItemType Directory -Force -Path "$($script:hubPath)\$d" | Out-Null
-            Write-Host "  [Created] $($script:hubPath)\$d" -ForegroundColor Green
+    # Always ensure the root directories exist
+    if (-not (Test-Path "$($script:hubPath)\skills")) { New-Item -ItemType Directory -Force -Path "$($script:hubPath)\skills" | Out-Null }
+    if (-not (Test-Path "$($script:hubPath)\config")) { New-Item -ItemType Directory -Force -Path "$($script:hubPath)\config" | Out-Null }
+
+    # Ensure any dynamically nested subdirectories map correctly
+    foreach ($entry in $agentMap) {
+        $parts = $entry -split '\|', 2
+        $localPath = $parts[0]
+        $hubSub = $parts[1]
+        $target = Resolve-Target $hubSub
+
+        # If the local path is a known file (not a dir), or the target looks like a file (has an extension),
+        # we only need to ensure the parent folder exists to hold it. Otherwise, create the full target.
+        $targetBasename = Split-Path -Path $target -Leaf
+        $isFileTarget = ($targetBasename -match "\.")
+        $isLocalFile = (Test-Path -Path $localPath -PathType Leaf)
+
+        if ($isFileTarget -or $isLocalFile) {
+            $parentDir = Split-Path -Path $target -Parent
+            if (-not (Test-Path $parentDir)) {
+                New-Item -ItemType Directory -Force -Path $parentDir | Out-Null
+                Write-Host "  [Created] $parentDir" -ForegroundColor Green
+            }
+        } else {
+            if (-not (Test-Path $target)) {
+                New-Item -ItemType Directory -Force -Path $target | Out-Null
+                Write-Host "  [Created] $target" -ForegroundColor Green
+            }
         }
     }
 }

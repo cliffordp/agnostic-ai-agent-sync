@@ -378,16 +378,32 @@ merge_existing_skills() {
 
 # ─── Ensure Hub subdirectories ───────────────────────────────────
 ensure_hub_dirs() {
-    MISSING_DIRS=()
-    [ ! -d "$HUB_PATH/skills" ] && MISSING_DIRS+=("skills")
-    [ ! -d "$HUB_PATH/config" ] && MISSING_DIRS+=("config")
-
-    if [ ${#MISSING_DIRS[@]} -gt 0 ]; then
-        for d in "${MISSING_DIRS[@]}"; do
-            mkdir -p "$HUB_PATH/$d"
-            echo -e "  ${GREEN}[Created]${RESET} $HUB_PATH/$d"
-        done
-    fi
+    build_agent_map
+    
+    # Always ensure the root directories exist
+    mkdir -p "$HUB_PATH/skills" "$HUB_PATH/config"
+    
+    # Ensure any dynamically nested subdirectories map correctly
+    for ENTRY in "${AGENT_MAP[@]}"; do
+        LOCAL_PATH="${ENTRY%%|*}"
+        HUB_SUB="${ENTRY##*|}"
+        TARGET=$(resolve_target "$HUB_SUB")
+        
+        # If the local path is a known file (not a dir), or the target looks like a file (has an extension),
+        # we only need to ensure the parent folder exists to hold it. Otherwise, create the full target.
+        if [ -f "$LOCAL_PATH" ] || [[ "$(basename "$TARGET")" == *.* ]]; then
+            PARENT_DIR=$(dirname "$TARGET")
+            if [ ! -d "$PARENT_DIR" ]; then
+                mkdir -p "$PARENT_DIR"
+                echo -e "  ${GREEN}[Created]${RESET} $PARENT_DIR"
+            fi
+        else
+            if [ ! -d "$TARGET" ]; then
+                mkdir -p "$TARGET"
+                echo -e "  ${GREEN}[Created]${RESET} $TARGET"
+            fi
+        fi
+    done
 }
 
 # ─── SYNC command (main) ────────────────────────────────────────
