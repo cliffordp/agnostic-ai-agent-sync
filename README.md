@@ -24,6 +24,7 @@ Worse, existing sync approaches create regular symlinks that are **easily overwr
 | Clean skill repos | ❌ Cloned repos pollute each other’s git state | ✅ Each repo is an independent sibling |
 | Dependencies | Node.js / npm | **Zero** — native bash & PowerShell |
 | Undo / unlock | Manual googling | ✅ Built-in `unsync` script removes locks and unlinks tools |
+| Multi-device sync | ❌ Not handled | ✅ Native via cloud Hub folder (Dropbox/iCloud/OneDrive) |
 
 ### How It Works
 
