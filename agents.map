@@ -10,6 +10,8 @@ UNIX|$HOME/.codex/config|config
 UNIX|$HOME/.cursor/skills|skills
 UNIX|$HOME/.cursorrules|config/CLAUDE.md
 UNIX|$HOME/.gemini/antigravity/skills|skills
+UNIX|$HOME/.gemini/skills|skills
+UNIX|$HOME/.agents/skills|skills
 UNIX|$HOME/.codeium/windsurf/skills|skills
 UNIX|$HOME/.qoder/skills|skills
 
@@ -21,5 +23,7 @@ WIN|$userProfile\.codex\config|config
 WIN|$userProfile\.cursor\skills|skills
 WIN|$userProfile\.cursorrules|config\CLAUDE.md
 WIN|$userProfile\.gemini\antigravity\skills|skills
+WIN|$userProfile\.gemini\skills|skills
+WIN|$userProfile\.agents\skills|skills
 WIN|$userProfile\.codeium\windsurf\skills|skills
 WIN|$userProfile\.qoder\skills|skills
