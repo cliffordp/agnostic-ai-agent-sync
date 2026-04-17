@@ -119,12 +119,16 @@ If you download a raw Claude-only skill into your Hub, you can run `skill-porter
 
 To prevent confusion, here is exactly what Agnostic Agent Sync handles:
 
-✅ **IT DOES:** Act as a local filesystem bridge. It seamlessly maps the native configuration and `skills/` folders belonging to all your local AI programs (Claude, Gemini CLI, Cursor, etc.) into a single unified directory (your Hub). 
+✅ **IT DOES:** Act as a local filesystem bridge. It seamlessly maps the native configuration and `skills/` folders belonging to all your local AI programs (Claude, Gemini CLI, Cursor, etc.) into a single unified directory (your Hub).
+
 ✅ **IT DOES:** Protect your custom skills, `.cursorrules`, and instructions from being overwritten or silently deleted when your IDEs run aggressive background software updates.
+
 ✅ **IT DOES:** Enable zero-effort multi-laptop synchronization if you choose to set your Hub location to a cloud storage folder like Dropbox or iCloud.
 
-❌ **IT DOES NOT:** Act as a package manager. It does not download, parse, extract, or install third-party plugins from remote internet marketplaces (e.g., using `/plugin install` in Claude bypasses this bridge entirely because it hides files in proprietary sub-directories). 
+❌ **IT DOES NOT:** Act as a package manager. It does not download, parse, extract, or install third-party plugins from remote internet marketplaces (e.g., using `/plugin install` in Claude bypasses this bridge entirely because it hides files in proprietary sub-directories).
+
 ❌ **IT DOES NOT:** Untangle third-party GitHub megarepos. If you manually download a massive skills bundle from another author, you must ensure the `SKILL.md` folders are placed directly in your Hub directory, not buried deep inside random subfolders.
+
 ❌ **IT DOES NOT:** Translate file formats. If an AI tool rigidly requires a proprietary json manifest instead of a generic Markdown file, you still need to generate it (which is why we recommend using [Skill Porter](https://github.com/jduncan-rva/skill-porter) alongside this sync script).
 
 ## Supported Agents
