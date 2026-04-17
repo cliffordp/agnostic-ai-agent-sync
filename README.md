@@ -139,7 +139,7 @@ And if you want that same skill on your second laptop? You have to repeat all fo
 
 ```bash
 # Just drop the skill straight into your Dropbox Hub!
-cd ~/Dropbox/agents/skills
+~/.claude/skills # OR, to your *actual* directory: cd ~/Dropbox/agents/skills
 git clone https://github.com/repo/fancy-universal-skill.git
 ```
 **That's it. You're done forever.** Because Agnostic Agent Sync has hollowed out your system's `~/.claude/skills/`, `~/.agents/skills/`, and `~/.cursor/rules/` folders and wired them directly to your universal Hub, all of your different AI tools instantly process the raw skill. And because your Hub can optionally be located in cloud storage (like Dropbox or OneDrive) to help sync between your multiple computers, your second laptop is already up-to-date! You never have to manually copy folders again.
