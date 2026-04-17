@@ -144,10 +144,10 @@ git clone https://github.com/repo/fancy-universal-skill.git
 ```
 **That's it. You're done forever.** Because Agnostic Agent Sync has hollowed out your system's `~/.claude/skills/`, `~/.agents/skills/`, and `~/.cursor/rules/` folders and wired them directly to your universal Hub, all of your different AI tools instantly process the raw skill. And because your Hub can optionally be located in cloud storage (like Dropbox or OneDrive) to help sync between your multiple computers, your second laptop is already up-to-date! You never have to manually copy folders again.
 
-#### A Note on IDE Marketplaces (Vendor Lock-in)
-You might be tempted to use your IDE's built-in package manager (e.g., Claude Code's `/plugin install` or Gemini's `gemini extensions install`). **Do not do this if you want universal compatibility.**
+#### A Note on Tool Marketplaces (Vendor Lock-in)
+You might be tempted to use your AI tool's built-in package manager (e.g., Claude Code's `/plugin install` or Gemini's `gemini extensions install`). **Do not do this if you want universal compatibility.**
 
-Proprietary installers trap the downloaded files inside hidden, IDE-specific sandbox folders (like `~/.claude/plugins/marketplaces/`) instead of the standard `skills/` directory. By bypassing your IDE's marketplace and cloning the skill directly into your Agnostic Hub, you effectively "jailbreak" the skill, forcing it to be readable by every AI on your machine rather than just the one you downloaded it through.
+Proprietary installers trap the downloaded files inside hidden, tool-specific sandbox folders (like `~/.claude/plugins/marketplaces/`) instead of the standard `skills/` directory. By bypassing your agent's marketplace and cloning the skill directly into your Agnostic Hub, you effectively "jailbreak" the skill, forcing it to be readable by every AI on your machine rather than just the one you downloaded it through.
 
 ## Supported Agents
 
