@@ -135,13 +135,13 @@ git clone https://github.com/repo/fancy-universal-skill.git ~/.agents/skills/fan
 ```
 And if you want that same skill on your second laptop? You have to repeat all four manual steps over there.
 
-**With Agnostic Sync**, the multi-IDE bloat is eliminated. Installation is dramatically simplified to exactly **one action**:
+**With Agnostic Sync**, the multi-IDE bloat is eliminated. Because all your IDEs are essentially "looking at the same folder through a mirror", you can use **any one** of the native installation commands, and the skill will magically deploy to every other AI on your machine simultaneously:
+
 ```bash
-# Just drop the skill directly into your Dropbox Hub!
-cd ~/Dropbox/agents/skills
-git clone https://github.com/repo/fancy-universal-skill.git
+# Just run your favorite IDE's normal install command:
+/plugin install fancy-universal-skill@repo
 ```
-**That's it. You're done forever.** Because Agnostic Agent Sync has already mapped your system's `~/.claude/`, `~/.agents/`, and `~/.cursor/` folders to your Hub, all of your different AI tools effortlessly read the newly downloaded skill. Zero proprietary install pipelines required. And because it's in Dropbox, your second laptop is already up-to-date!
+**That's it. You're done forever.** When Claude installs the skill, it saves the files into `~/.claude/skills/`. Because Agnostic Agent Sync has turned that folder into a direct symlink to your Dropbox, Claude is tricked into installing the files straight into your cloud storage. Instantly, your Gemini CLI and Cursor environments read the exact same skills because they are wired to that same Dropbox Hub. You never have to manually copy folders again!
 
 ## Supported Agents
 
