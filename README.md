@@ -106,6 +106,15 @@ Run this from wherever you downloaded or cloned the script:
 
 Shows a dashboard of all your synced agents — whether each link is healthy, locked, broken, or not yet synced.
 
+## Working with Skill Porter
+
+Agnostic AI Agent Sync pairs perfectly with translation tools like [Skill Porter](https://github.com/jduncan-rva/skill-porter). While they solve fundamentally different problems, they are highly complementary:
+
+- **Skill Porter** solves the *metadata format*: It translates proprietary YAML files into JSON so a single skill repository can be universally parsed by Claude, Gemini, and others.
+- **Agnostic Agent Sync** solves the *storage pipeline*: It ensures that once your universal skill exists, you only ever need to store **one physical copy** of it in your cloud Hub. 
+
+If you download a raw Claude-only skill into your Hub, you can run `skill-porter convert` to generate the missing Gemini metadata files directly inside that Dropbox folder. Then, because Agnostic Agent Sync acts as an OS-level bridge mapping both `~/.claude/` and `~/.agents/` back to your Hub, all your different AI tools instantly realize the skill is universally compatible without you having to manually duplicate or synchronize the folder across your IDEs!
+
 ## Supported Agents
 
 Because the script dynamically fetches tool paths from this repository linearly, the canonical list of supported AI tools is always up to date inside the [`agents.map`](agents.map) file. 
