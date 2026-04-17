@@ -115,39 +115,17 @@ Agnostic AI Agent Sync pairs perfectly with translation tools like [Skill Porter
 
 If you download a raw Claude-only skill into your Hub, you can run `skill-porter convert` to generate the missing Gemini metadata files directly inside that Dropbox folder. Then, because Agnostic Agent Sync acts as an OS-level bridge mapping both `~/.claude/` and `~/.agents/` back to your Hub, all your different AI tools instantly realize the skill is universally compatible without you having to manually duplicate or synchronize the folder across your IDEs!
 
-### The Universal Installation Nightmare (Solved)
+### What This Script Does vs. What It Doesn't Do
 
-If you find a brilliant universal skill online (like those from Hugging Face or [SEO GEO Skills](https://github.com/aaron-he-zhu/seo-geo-claude-skills)), the author is usually forced to give you a massive wall of installation instructions depending on which IDE you happen to be using today. 
+To prevent confusion, here is exactly what Agnostic Agent Sync handles:
 
-**Without Agnostic Sync**, you would have to painstakingly run independent commands for *every* IDE:
-```bash
-# To install for Claude Code:
-/plugin install fancy-universal-skill@repo
+✅ **IT DOES:** Act as a local filesystem bridge. It seamlessly maps the native configuration and `skills/` folders belonging to all your local AI programs (Claude, Gemini CLI, Cursor, etc.) into a single unified directory (your Hub). 
+✅ **IT DOES:** Protect your custom skills, `.cursorrules`, and instructions from being overwritten or silently deleted when your IDEs run aggressive background software updates.
+✅ **IT DOES:** Enable zero-effort multi-laptop synchronization if you choose to set your Hub location to a cloud storage folder like Dropbox or iCloud.
 
-# To install for Gemini CLI:
-gemini extensions install https://github.com/repo/fancy-universal-skill.git --consent
-
-# To install for Codex:
-git clone https://github.com/repo/fancy-universal-skill.git ~/.agents/skills/fancy-universal-skill
-
-# To install for Cursor:
-# (Open marketplace UI, search for name, click install)
-```
-And if you want that same skill on your second laptop? You have to repeat all four manual steps over there.
-
-**With Agnostic Sync**, the multi-IDE bloat is eliminated. Installation is dramatically simplified to exactly **one action**:
-
-```bash
-# Just drop the skill straight into your Dropbox Hub!
-~/.claude/skills # OR, to your *actual* directory: cd ~/Dropbox/agents/skills
-git clone https://github.com/repo/fancy-universal-skill.git
-```
-**That's it. You're done forever.** Because Agnostic Agent Sync has hollowed out your system's `~/.claude/skills/`, `~/.agents/skills/`, and `~/.cursor/rules/` folders and wired them directly to your universal Hub, all of your different AI tools instantly process the raw skill. And because your Hub can optionally be located in cloud storage (like Dropbox or OneDrive) to help sync between your multiple computers, your second laptop is already up-to-date! You never have to manually copy folders again.
-
-#### A Note on Tool Marketplaces (Vendor Lock-in)
-You might be tempted to use your AI tool's built-in package manager (e.g., Claude Code's `/plugin install` or Gemini's `gemini extensions install`). **Do not do this if you want universal compatibility.**
-
-Proprietary installers trap the downloaded files inside hidden, tool-specific sandbox folders (like `~/.claude/plugins/marketplaces/`) instead of the standard `skills/` directory. By bypassing your agent's marketplace and cloning the skill directly into your Agnostic Hub, you effectively "jailbreak" the skill, forcing it to be readable by every AI on your machine rather than just the one you downloaded it through.
+❌ **IT DOES NOT:** Act as a package manager. It does not download, parse, extract, or install third-party plugins from remote internet marketplaces (e.g., using `/plugin install` in Claude bypasses this bridge entirely because it hides files in proprietary sub-directories). 
+❌ **IT DOES NOT:** Untangle third-party GitHub megarepos. If you manually download a massive skills bundle from another author, you must ensure the `SKILL.md` folders are placed directly in your Hub directory, not buried deep inside random subfolders.
+❌ **IT DOES NOT:** Translate file formats. If an AI tool rigidly requires a proprietary json manifest instead of a generic Markdown file, you still need to generate it (which is why we recommend using [Skill Porter](https://github.com/jduncan-rva/skill-porter) alongside this sync script).
 
 ## Supported Agents
 
