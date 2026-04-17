@@ -135,7 +135,7 @@ git clone https://github.com/repo/fancy-universal-skill.git ~/.agents/skills/fan
 ```
 And if you want that same skill on your second laptop? You have to repeat all four manual steps over there.
 
-**With Agnostic Sync**, the multi-IDE bloat is eliminated. Because all your IDEs are essentially "looking at the same folder through a mirror", you can use **any one** of the native installation commands, and the skill will magically deploy to every other AI on your machine simultaneously:
+**With Agnostic Sync**, the multi-IDE bloat is eliminated. Because all your IDEs are essentially wired to the exact same physical folder, you can use **any one** of the native installation commands and the skill will magically deploy to every other AI on your machine simultaneously:
 
 ```bash
 # Just run your favorite IDE's normal install command:
