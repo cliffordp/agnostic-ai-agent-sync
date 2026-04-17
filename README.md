@@ -135,13 +135,19 @@ git clone https://github.com/repo/fancy-universal-skill.git ~/.agents/skills/fan
 ```
 And if you want that same skill on your second laptop? You have to repeat all four manual steps over there.
 
-**With Agnostic Sync**, the multi-IDE bloat is eliminated. Because all your IDEs are essentially wired to the exact same physical folder, you can use **any one** of the native installation commands and the skill will magically deploy to every other AI on your machine simultaneously:
+**With Agnostic Sync**, the multi-IDE bloat is eliminated. Installation is dramatically simplified to exactly **one action**:
 
 ```bash
-# Just run your favorite IDE's normal install command:
-/plugin install fancy-universal-skill@repo
+# Just drop the skill straight into your Dropbox Hub!
+cd ~/Dropbox/agents/skills
+git clone https://github.com/repo/fancy-universal-skill.git
 ```
-**That's it. You're done forever.** When Claude installs the skill, it saves the files into `~/.claude/skills/`. Because Agnostic Agent Sync has turned that folder into a direct symlink to your Dropbox (or your other folder of choice), Claude is tricked into installing the files straight into your universal folder, optionally located in a cloud storage to help sync between your multiple computers. Instantly, your Claude, Gemini CLI, Cursor, and other environments read the exact same skills because they are wired to that same Dropbox Hub. You never have to manually copy folders again!
+**That's it. You're done forever.** Because Agnostic Agent Sync has hollowed out your system's `~/.claude/skills/`, `~/.agents/skills/`, and `~/.cursor/rules/` folders and wired them directly to your universal Hub, all of your different AI tools instantly process the raw skill. And because your Hub can optionally be located in cloud storage (like Dropbox or OneDrive) to help sync between your multiple computers, your second laptop is already up-to-date! You never have to manually copy folders again.
+
+#### A Note on IDE Marketplaces (Vendor Lock-in)
+You might be tempted to use your IDE's built-in package manager (e.g., Claude Code's `/plugin install` or Gemini's `gemini extensions install`). **Do not do this if you want universal compatibility.**
+
+Proprietary installers trap the downloaded files inside hidden, IDE-specific sandbox folders (like `~/.claude/plugins/marketplaces/`) instead of the standard `skills/` directory. By bypassing your IDE's marketplace and cloning the skill directly into your Agnostic Hub, you effectively "jailbreak" the skill, forcing it to be readable by every AI on your machine rather than just the one you downloaded it through.
 
 ## Supported Agents
 
