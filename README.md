@@ -115,6 +115,34 @@ Agnostic AI Agent Sync pairs perfectly with translation tools like [Skill Porter
 
 If you download a raw Claude-only skill into your Hub, you can run `skill-porter convert` to generate the missing Gemini metadata files directly inside that Dropbox folder. Then, because Agnostic Agent Sync acts as an OS-level bridge mapping both `~/.claude/` and `~/.agents/` back to your Hub, all your different AI tools instantly realize the skill is universally compatible without you having to manually duplicate or synchronize the folder across your IDEs!
 
+### The Universal Installation Nightmare (Solved)
+
+If you find a brilliant universal skill online (like those from Hugging Face or [SEO GEO Skills](https://github.com/aaron-he-zhu/seo-geo-claude-skills)), the author is usually forced to give you a massive wall of installation instructions depending on which IDE you happen to be using today. 
+
+**Without Agnostic Sync**, you would have to painstakingly run independent commands for *every* IDE:
+```bash
+# To install for Claude Code:
+/plugin install fancy-universal-skill@repo
+
+# To install for Gemini CLI:
+gemini extensions install https://github.com/repo/fancy-universal-skill.git --consent
+
+# To install for Codex:
+git clone https://github.com/repo/fancy-universal-skill.git ~/.agents/skills/fancy-universal-skill
+
+# To install for Cursor:
+# (Open marketplace UI, search for name, click install)
+```
+And if you want that same skill on your second laptop? You have to repeat all four manual steps over there.
+
+**With Agnostic Sync**, the multi-IDE bloat is eliminated. Installation is dramatically simplified to exactly **one action**:
+```bash
+# Just drop the skill directly into your Dropbox Hub!
+cd ~/Dropbox/agents/skills
+git clone https://github.com/repo/fancy-universal-skill.git
+```
+**That's it. You're done forever.** Because Agnostic Agent Sync has already mapped your system's `~/.claude/`, `~/.agents/`, and `~/.cursor/` folders to your Hub, all of your different AI tools effortlessly read the newly downloaded skill. Zero proprietary install pipelines required. And because it's in Dropbox, your second laptop is already up-to-date!
+
 ## Supported Agents
 
 Because the script dynamically fetches tool paths from this repository linearly, the canonical list of supported AI tools is always up to date inside the [`agents.map`](agents.map) file. 
