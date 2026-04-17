@@ -141,7 +141,7 @@ And if you want that same skill on your second laptop? You have to repeat all fo
 # Just run your favorite IDE's normal install command:
 /plugin install fancy-universal-skill@repo
 ```
-**That's it. You're done forever.** When Claude installs the skill, it saves the files into `~/.claude/skills/`. Because Agnostic Agent Sync has turned that folder into a direct symlink to your Dropbox, Claude is tricked into installing the files straight into your cloud storage. Instantly, your Gemini CLI and Cursor environments read the exact same skills because they are wired to that same Dropbox Hub. You never have to manually copy folders again!
+**That's it. You're done forever.** When Claude installs the skill, it saves the files into `~/.claude/skills/`. Because Agnostic Agent Sync has turned that folder into a direct symlink to your Dropbox (or your other folder of choice), Claude is tricked into installing the files straight into your universal folder, optionally located in a cloud storage to help sync between your multiple computers. Instantly, your Claude, Gemini CLI, Cursor, and other environments read the exact same skills because they are wired to that same Dropbox Hub. You never have to manually copy folders again!
 
 ## Supported Agents
 
