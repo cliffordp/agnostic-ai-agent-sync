@@ -95,6 +95,7 @@ The script will:
 3. Scan your system for installed AI agents
 4. Show you exactly what it plans to do
 5. Wait for you to type `y` before touching anything
+6. Ask if you want to automatically configure global agent defaults (e.g., setting `AGENTS.md` as the default context for Gemini CLI and Aider)
 
 > **Re-running is safe.** The script remembers your Hub path (saved to `~/.agnostic-ai-agent-sync`). Subsequent runs skip the wizard and go straight to analysis.
 
@@ -238,6 +239,9 @@ This tool only manages **global** (user-level) config. Per-project files inside 
 
 **Q: Can I have different skills for different AI coding tools?**
 Not with this tool — the whole point is a single shared set. If you need tool-specific skills, manage those manually in per-project directories instead.
+
+**Q: Does this configure my agents for me?**
+The script offers an optional step at the end to set `AGENTS.md` as the default context file for tools like the Gemini CLI and Aider. This is strictly opt-in and checks for existing configurations to prevent accidental overwrites.
 
 **Q: My AI coding tool just updated and something seems broken. What do I do?**
 Run `./sync.sh status` to check if the symlinks are still intact. If the lock held (which it should), you'll see all green. If something got overwritten, re-run `./sync.sh` to repair it.

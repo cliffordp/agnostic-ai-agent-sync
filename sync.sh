@@ -36,8 +36,12 @@ UNIX|$HOME/.claude/config|config
 UNIX|$HOME/.codex/skills|skills
 UNIX|$HOME/.codex/config|config
 UNIX|$HOME/.cursor/skills|skills
-UNIX|$HOME/.cursorrules|config/CLAUDE.md
+UNIX|$HOME/.cursorrules|config/AGENTS.md
 UNIX|$HOME/.gemini/antigravity/skills|skills
+UNIX|$HOME/.gemini/antigravity/config|config
+UNIX|$HOME/.gemini/skills|skills
+UNIX|$HOME/.gemini/config|config
+UNIX|$HOME/.agents/skills|skills
 UNIX|$HOME/.codeium/windsurf/skills|skills
 UNIX|$HOME/.qoder/skills|skills
 EOF
@@ -404,6 +408,66 @@ ensure_hub_dirs() {
             fi
         fi
     done
+
+    # Standardize on AGENTS.md for unified context
+    if [ -d "$HUB_PATH/config" ]; then
+        (
+            cd "$HUB_PATH/config" || true
+            if [ ! -f "AGENTS.md" ]; then
+                if [ -f "CLAUDE.md" ] && [ ! -L "CLAUDE.md" ]; then
+                    mv "CLAUDE.md" "AGENTS.md"
+                elif [ -f "GEMINI.md" ] && [ ! -L "GEMINI.md" ]; then
+                    mv "GEMINI.md" "AGENTS.md"
+                else
+                    touch "AGENTS.md"
+                fi
+            fi
+
+            # Create symlinks for legacy file expectations within the config dir
+            for alias in "CLAUDE.md" "GEMINI.md"; do
+                if [ ! -e "$alias" ]; then
+                    ln -s "AGENTS.md" "$alias" 2>/dev/null || true
+                fi
+            done
+        )
+    fi
+}
+
+# ─── Configure Global Agents (Optional) ───────────────────────────
+configure_global_agents() {
+    echo ""
+    echo -e "${CYAN}${BOLD}=== Global Agent Configuration ===${RESET}"
+    read -rp "[?] Set AGENTS.md as the default context for Gemini CLI and Aider? (y/N): " CONFIG_AGENTS
+    
+    if [[ "$CONFIG_AGENTS" =~ ^[Yy]$ ]]; then
+        # 1. Configure Gemini CLI
+        if command -v jq >/dev/null 2>&1; then
+            mkdir -p ~/.gemini
+            if [ ! -f ~/.gemini/settings.json ]; then
+                echo "{}" > ~/.gemini/settings.json
+            fi
+            
+            # Check if context.fileName already exists
+            if ! jq -e '.context.fileName' ~/.gemini/settings.json > /dev/null 2>&1; then
+                jq '.context.fileName = "AGENTS.md"' ~/.gemini/settings.json > ~/.gemini/settings_tmp.json && mv ~/.gemini/settings_tmp.json ~/.gemini/settings.json
+                echo -e "  ${GREEN}[Configured]${RESET} Gemini CLI to use AGENTS.md"
+            else
+                echo -e "  ${DIM}Gemini CLI already has a context file configured. Skipped.${RESET}"
+            fi
+        else
+            echo -e "  ${YELLOW}[Warning]${RESET} 'jq' is not installed. Skipping Gemini CLI configuration."
+        fi
+
+        # 2. Configure Aider
+        if [ -f ~/.aider.conf.yml ] && grep -q "^read: " ~/.aider.conf.yml; then
+            echo -e "  ${DIM}Aider already has a 'read:' directive configured. Skipped.${RESET}"
+        else
+            echo -e "\nread: AGENTS.md" >> ~/.aider.conf.yml
+            echo -e "  ${GREEN}[Configured]${RESET} Aider to use AGENTS.md"
+        fi
+    else
+        echo -e "  ${DIM}Skipped agent configuration.${RESET}"
+    fi
 }
 
 # ─── SYNC command (main) ────────────────────────────────────────
@@ -510,6 +574,10 @@ cmd_sync() {
     if [ ${#PLAN_ACTION[@]} -eq $ALREADY_OK ] && [ $ALREADY_OK -gt 0 ]; then
         echo ""
         echo -e "${GREEN}${BOLD}✓ All $ALREADY_OK agent(s) already synced and locked. Nothing to do!${RESET}"
+        
+        # Offer global configuration of agents even if synced
+        configure_global_agents
+        
         exit 0
     fi
 
@@ -614,6 +682,9 @@ cmd_sync() {
 
     # Offer cleanup of backup files
     offer_cleanup
+
+    # Offer global configuration of agents
+    configure_global_agents
 
     echo ""
     echo "Useful commands:"

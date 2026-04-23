@@ -19,8 +19,12 @@ WIN|`$userProfile\.claude\config|config
 WIN|`$userProfile\.codex\skills|skills
 WIN|`$userProfile\.codex\config|config
 WIN|`$userProfile\.cursor\skills|skills
-WIN|`$userProfile\.cursorrules|config\CLAUDE.md
+WIN|`$userProfile\.cursorrules|config\AGENTS.md
 WIN|`$userProfile\.gemini\antigravity\skills|skills
+WIN|`$userProfile\.gemini\antigravity\config|config
+WIN|`$userProfile\.gemini\skills|skills
+WIN|`$userProfile\.gemini\config|config
+WIN|`$userProfile\.agents\skills|skills
 WIN|`$userProfile\.codeium\windsurf\skills|skills
 WIN|`$userProfile\.qoder\skills|skills
 "@
@@ -320,6 +324,93 @@ function Ensure-HubDirs {
             }
         }
     }
+
+    # Standardize on AGENTS.md for unified context
+    $configPath = "$($script:hubPath)\config"
+    if (Test-Path $configPath) {
+        Push-Location $configPath
+        $agentsMd = "AGENTS.md"
+        
+        if (-not (Test-Path $agentsMd)) {
+            if ((Test-Path "CLAUDE.md") -and -not ((Get-Item "CLAUDE.md" -Force).Attributes -match "ReparsePoint")) {
+                Rename-Item "CLAUDE.md" "AGENTS.md"
+            } elseif ((Test-Path "GEMINI.md") -and -not ((Get-Item "GEMINI.md" -Force).Attributes -match "ReparsePoint")) {
+                Rename-Item "GEMINI.md" "AGENTS.md"
+            } else {
+                New-Item -ItemType File -Name "AGENTS.md" -Force | Out-Null
+            }
+        }
+
+        # Create symlinks for legacy file expectations within the config dir
+        foreach ($alias in @("CLAUDE.md", "GEMINI.md")) {
+            if (-not (Test-Path $alias)) {
+                cmd /c mklink $alias AGENTS.md > $null 2>&1
+            }
+        }
+        Pop-Location
+    }
+}
+
+# ─── Configure Global Agents (Optional) ───────────────────────────
+function Invoke-ConfigureGlobalAgents {
+    Write-Host ""
+    Write-Host "=== Global Agent Configuration ===" -ForegroundColor Cyan
+    $configAgents = Read-Host "[?] Set AGENTS.md as the default context for Gemini CLI and Aider? (y/N)"
+    
+    if ($configAgents -match "^[Yy]$") {
+        # 1. Configure Gemini CLI
+        $geminiDir = "$userProfile\.gemini"
+        $geminiSettings = "$geminiDir\settings.json"
+        
+        if (-Not (Test-Path $geminiDir)) {
+            New-Item -ItemType Directory -Force -Path $geminiDir | Out-Null
+        }
+        if (-Not (Test-Path $geminiSettings)) {
+            "{}" | Out-File -FilePath $geminiSettings -Encoding utf8
+        }
+        
+        try {
+            $content = Get-Content $geminiSettings -Raw
+            if ([string]::IsNullOrWhiteSpace($content)) { $content = "{}" }
+            $obj = $content | ConvertFrom-Json
+            
+            $hasContext = [bool](Get-Member -InputObject $obj -Name "context" -ErrorAction SilentlyContinue)
+            $hasFileName = $false
+            if ($hasContext -and $null -ne $obj.context) {
+                $hasFileName = [bool](Get-Member -InputObject $obj.context -Name "fileName" -ErrorAction SilentlyContinue)
+            }
+            
+            if (-not $hasContext) {
+                $obj | Add-Member -MemberType NoteProperty -Name "context" -Value @{ "fileName" = "AGENTS.md" }
+                $obj | ConvertTo-Json -Depth 10 | Out-File -FilePath $geminiSettings -Encoding utf8
+                Write-Host "  [Configured] Gemini CLI to use AGENTS.md" -ForegroundColor Green
+            } elseif (-not $hasFileName) {
+                $obj.context | Add-Member -MemberType NoteProperty -Name "fileName" -Value "AGENTS.md"
+                $obj | ConvertTo-Json -Depth 10 | Out-File -FilePath $geminiSettings -Encoding utf8
+                Write-Host "  [Configured] Gemini CLI to use AGENTS.md" -ForegroundColor Green
+            } else {
+                Write-Host "  Gemini CLI already has a context file configured. Skipped." -ForegroundColor DarkGray
+            }
+        } catch {
+            Write-Host "  [Warning] Could not parse $geminiSettings. Skipping Gemini CLI configuration." -ForegroundColor Yellow
+        }
+
+        # 2. Configure Aider
+        $aiderConfig = "$userProfile\.aider.conf.yml"
+        $hasAiderConfig = $false
+        if (Test-Path $aiderConfig) {
+            $hasAiderConfig = (Select-String -Path $aiderConfig -Pattern "^read:" -Quiet)
+        }
+        
+        if ($hasAiderConfig) {
+            Write-Host "  Aider already has a 'read:' directive configured. Skipped." -ForegroundColor DarkGray
+        } else {
+            "`nread: AGENTS.md" | Out-File -FilePath $aiderConfig -Append -Encoding utf8
+            Write-Host "  [Configured] Aider to use AGENTS.md" -ForegroundColor Green
+        }
+    } else {
+        Write-Host "  Skipped agent configuration." -ForegroundColor DarkGray
+    }
 }
 
 # ─── SYNC command (main) ────────────────────────────────────────
@@ -414,6 +505,9 @@ function Invoke-Sync {
     if ($planActions.Count -eq $alreadyOk -and $alreadyOk -gt 0) {
         Write-Host ""
         Write-Host "All $alreadyOk agent(s) already synced and locked. Nothing to do!" -ForegroundColor Green
+        
+        Invoke-ConfigureGlobalAgents
+        
         return
     }
 
@@ -532,6 +626,8 @@ function Invoke-Sync {
     Write-Host "==============================================="
 
     Invoke-OfferCleanup
+
+    Invoke-ConfigureGlobalAgents
 
     Write-Host ""
     Write-Host "Useful commands:"
