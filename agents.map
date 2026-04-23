@@ -8,9 +8,11 @@ UNIX|$HOME/.claude/config|config
 UNIX|$HOME/.codex/skills|skills
 UNIX|$HOME/.codex/config|config
 UNIX|$HOME/.cursor/skills|skills
-UNIX|$HOME/.cursorrules|config/CLAUDE.md
+UNIX|$HOME/.cursorrules|config/AGENTS.md
 UNIX|$HOME/.gemini/antigravity/skills|skills
+UNIX|$HOME/.gemini/antigravity/config|config
 UNIX|$HOME/.gemini/skills|skills
+UNIX|$HOME/.gemini/config|config
 UNIX|$HOME/.agents/skills|skills
 UNIX|$HOME/.codeium/windsurf/skills|skills
 UNIX|$HOME/.qoder/skills|skills
@@ -21,9 +23,11 @@ WIN|$userProfile\.claude\config|config
 WIN|$userProfile\.codex\skills|skills
 WIN|$userProfile\.codex\config|config
 WIN|$userProfile\.cursor\skills|skills
-WIN|$userProfile\.cursorrules|config\CLAUDE.md
+WIN|$userProfile\.cursorrules|config\AGENTS.md
 WIN|$userProfile\.gemini\antigravity\skills|skills
+WIN|$userProfile\.gemini\antigravity\config|config
 WIN|$userProfile\.gemini\skills|skills
+WIN|$userProfile\.gemini\config|config
 WIN|$userProfile\.agents\skills|skills
 WIN|$userProfile\.codeium\windsurf\skills|skills
 WIN|$userProfile\.qoder\skills|skills
