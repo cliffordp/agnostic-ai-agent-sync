@@ -455,7 +455,13 @@ configure_global_agents() {
                 echo -e "  ${DIM}Gemini CLI already has a context file configured. Skipped.${RESET}"
             fi
         else
-            echo -e "  ${YELLOW}[Warning]${RESET} 'jq' is not installed. Skipping Gemini CLI configuration."
+            mkdir -p ~/.gemini
+            if [ ! -f ~/.gemini/settings.json ] || [ "$(cat ~/.gemini/settings.json | tr -d ' \n\r\t')" = "{}" ]; then
+                echo '{"context":{"fileName":"AGENTS.md"}}' > ~/.gemini/settings.json
+                echo -e "  ${GREEN}[Configured]${RESET} Gemini CLI to use AGENTS.md (no jq needed)"
+            else
+                echo -e "  ${YELLOW}[Warning]${RESET} 'jq' is not installed and settings.json is not empty. Skipping Gemini CLI configuration."
+            fi
         fi
 
         # 2. Configure Aider
