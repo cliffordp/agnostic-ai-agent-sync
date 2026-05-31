@@ -34,7 +34,7 @@ UNIX|$HOME/.claude/config|config
 UNIX|$HOME/.codex/skills|skills
 UNIX|$HOME/.codex/config|config
 UNIX|$HOME/.cursor/skills|skills
-UNIX|$HOME/.cursorrules|config/CLAUDE.md
+UNIX|$HOME/.cursorrules|config/AGENTS.md
 UNIX|$HOME/.gemini/antigravity/skills|skills
 UNIX|$HOME/.codeium/windsurf/skills|skills
 UNIX|$HOME/.qoder/skills|skills

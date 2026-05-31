@@ -22,7 +22,7 @@ WIN|`$userProfile\.claude\config|config
 WIN|`$userProfile\.codex\skills|skills
 WIN|`$userProfile\.codex\config|config
 WIN|`$userProfile\.cursor\skills|skills
-WIN|`$userProfile\.cursorrules|config\CLAUDE.md
+WIN|`$userProfile\.cursorrules|config\AGENTS.md
 WIN|`$userProfile\.gemini\antigravity\skills|skills
 WIN|`$userProfile\.codeium\windsurf\skills|skills
 WIN|`$userProfile\.qoder\skills|skills
