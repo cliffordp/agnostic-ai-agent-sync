@@ -24,12 +24,6 @@ WIN|`$userProfile\.gemini\antigravity\skills|skills
 WIN|`$userProfile\.gemini\antigravity\config|config
 WIN|`$userProfile\.gemini\skills|skills
 WIN|`$userProfile\.gemini\config|config
-WIN|`$userProfile\.antigravity\skills|skills
-WIN|`$userProfile\.antigravity\config|config
-WIN|`$userProfile\.antigravity-ide\skills|skills
-WIN|`$userProfile\.antigravity-ide\config|config
-WIN|`$userProfile\.antigravitycli\skills|skills
-WIN|`$userProfile\.antigravitycli\config|config
 WIN|`$userProfile\.agents\skills|skills
 WIN|`$userProfile\.codeium\windsurf\skills|skills
 WIN|`$userProfile\.qoder\skills|skills
