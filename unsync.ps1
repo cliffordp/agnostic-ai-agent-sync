@@ -88,7 +88,8 @@ $unlocked = 0
 foreach ($link in $linksToRemove) {
     $localPath = $link.FullName
     icacls $localPath /remove:d Everyone > $null 2>&1
-    cmd /c rmdir "$localPath"
+    if ($link.PSIsContainer) { cmd /c rmdir "$localPath" }
+    else { Remove-Item -Path "$localPath" -Force }
     Write-Host " [UNLINKED] $localPath" -ForegroundColor Green
     $unlocked++
 }
