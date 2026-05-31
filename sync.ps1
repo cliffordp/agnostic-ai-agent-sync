@@ -555,6 +555,10 @@ function Invoke-Sync {
 
                     if ($isFile) { cmd /c mklink "$actionPath" "$actionTarget" > $null 2>&1 }
                     else { New-Item -ItemType Junction -Path $actionPath -Value $actionTarget | Out-Null }
+                    
+                    if (-Not (Test-Path $actionPath)) {
+                        throw "Failed to create link: $actionPath (Administrator privileges or Developer Mode required to create file symlinks)"
+                    }
                     "LINKED|$actionPath" | Out-File -FilePath $walFile -Append
                     
                     icacls $actionPath /deny Everyone:`(DE`) > $null 2>&1
@@ -569,6 +573,10 @@ function Invoke-Sync {
 
                     if ($isFile) { cmd /c mklink "$actionPath" "$actionTarget" > $null 2>&1 }
                     else { New-Item -ItemType Junction -Path $actionPath -Value $actionTarget | Out-Null }
+                    
+                    if (-Not (Test-Path $actionPath)) {
+                        throw "Failed to create link: $actionPath (Administrator privileges or Developer Mode required to create file symlinks)"
+                    }
                     "LINKED|$actionPath" | Out-File -FilePath $walFile -Append
                     
                     icacls $actionPath /deny Everyone:`(DE`) > $null 2>&1
@@ -578,6 +586,10 @@ function Invoke-Sync {
                 "fresh" {
                     if ($isFile) { cmd /c mklink "$actionPath" "$actionTarget" > $null 2>&1 }
                     else { New-Item -ItemType Junction -Path $actionPath -Value $actionTarget | Out-Null }
+                    
+                    if (-Not (Test-Path $actionPath)) {
+                        throw "Failed to create link: $actionPath (Administrator privileges or Developer Mode required to create file symlinks)"
+                    }
                     "LINKED|$actionPath" | Out-File -FilePath $walFile -Append
                     
                     icacls $actionPath /deny Everyone:`(DE`) > $null 2>&1
