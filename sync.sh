@@ -41,6 +41,12 @@ UNIX|$HOME/.gemini/antigravity/skills|skills
 UNIX|$HOME/.gemini/antigravity/config|config
 UNIX|$HOME/.gemini/skills|skills
 UNIX|$HOME/.gemini/config|config
+UNIX|$HOME/.antigravity/skills|skills
+UNIX|$HOME/.antigravity/config|config
+UNIX|$HOME/.antigravity-ide/skills|skills
+UNIX|$HOME/.antigravity-ide/config|config
+UNIX|$HOME/.antigravitycli/skills|skills
+UNIX|$HOME/.antigravitycli/config|config
 UNIX|$HOME/.agents/skills|skills
 UNIX|$HOME/.codeium/windsurf/skills|skills
 UNIX|$HOME/.qoder/skills|skills
