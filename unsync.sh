@@ -20,7 +20,7 @@ echo ""
 declare -a KNOWN_PATHS=()
 
 build_known_paths() {
-    REMOTE_URL="https://raw.githubusercontent.com/cliffordp/agnostic-ai-agent-sync/main/agents.map"
+    REMOTE_URL="https://raw.githubusercontent.com/cliffordp/agnostic-ai-agent-sync/main/agents.map?t=$(date +%s)"
     MAP_CONTENT=""
 
     if command -v curl &> /dev/null; then

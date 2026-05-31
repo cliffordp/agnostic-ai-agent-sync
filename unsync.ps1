@@ -10,7 +10,7 @@ Write-Host ""
 $userProfile = $env:USERPROFILE
 
 function Get-KnownPaths {
-    $remoteUrl = "https://raw.githubusercontent.com/cliffordp/agnostic-ai-agent-sync/main/agents.map"
+    $remoteUrl = "https://raw.githubusercontent.com/cliffordp/agnostic-ai-agent-sync/main/agents.map?t=$(Get-Date -UFormat %s)"
     $mapContent = ""
     
     try {

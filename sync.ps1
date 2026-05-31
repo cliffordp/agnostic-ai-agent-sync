@@ -7,7 +7,7 @@ $userProfile = $env:USERPROFILE
 
 # ─── Agent mapping ───────────────────────────────────────────────
 function Get-AgentMap {
-    $remoteUrl = "https://raw.githubusercontent.com/cliffordp/agnostic-ai-agent-sync/main/agents.map"
+    $remoteUrl = "https://raw.githubusercontent.com/cliffordp/agnostic-ai-agent-sync/main/agents.map?t=$(Get-Date -UFormat %s)"
     $mapContent = ""
     
     try {

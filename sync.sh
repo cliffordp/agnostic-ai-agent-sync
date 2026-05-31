@@ -21,7 +21,7 @@ VERSION="1.0.0"
 # HUB_SUBFOLDER is relative to the Hub path
 build_agent_map() {
     AGENT_MAP=()
-    REMOTE_URL="https://raw.githubusercontent.com/cliffordp/agnostic-ai-agent-sync/main/agents.map"
+    REMOTE_URL="https://raw.githubusercontent.com/cliffordp/agnostic-ai-agent-sync/main/agents.map?t=$(date +%s)"
     MAP_CONTENT=""
 
     if command -v curl &> /dev/null; then
