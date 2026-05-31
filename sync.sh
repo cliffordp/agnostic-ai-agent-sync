@@ -651,8 +651,8 @@ cmd_sync() {
 
             backup_dir|backup_file)
                 BACKUP_PATH="${ACTION_PATH}.backup_${TIMESTAMP}"
-                mv "$ACTION_PATH" "$BACKUP_PATH"
                 echo "BACKED_UP|$ACTION_PATH|$BACKUP_PATH" >> "$WAL_FILE"
+                mv "$ACTION_PATH" "$BACKUP_PATH"
                 echo -e " ${YELLOW}[BACKED UP]${RESET} $ACTION_PATH → $BACKUP_PATH"
                 ln -s "$ACTION_TARGET" "$ACTION_PATH"
                 echo "LINKED|$ACTION_PATH" >> "$WAL_FILE"

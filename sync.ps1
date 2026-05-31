@@ -567,8 +567,8 @@ function Invoke-Sync {
                 }
                 "backup" {
                     $backupPath = "$actionPath.backup_$timestamp"
-                    Rename-Item -Path $actionPath -NewName (Split-Path $backupPath -Leaf)
                     "BACKED_UP|$actionPath|$backupPath" | Out-File -FilePath $walFile -Append
+                    Rename-Item -Path $actionPath -NewName (Split-Path $backupPath -Leaf)
                     Write-Host " [BACKED UP] $actionPath -> $backupPath" -ForegroundColor Yellow
 
                     if ($isFile) { cmd /c mklink "$actionPath" "$actionTarget" > $null 2>&1 }
