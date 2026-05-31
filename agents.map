@@ -13,6 +13,12 @@ UNIX|$HOME/.gemini/antigravity/skills|skills
 UNIX|$HOME/.gemini/antigravity/config|config
 UNIX|$HOME/.gemini/skills|skills
 UNIX|$HOME/.gemini/config|config
+UNIX|$HOME/.antigravity/skills|skills
+UNIX|$HOME/.antigravity/config|config
+UNIX|$HOME/.antigravity-ide/skills|skills
+UNIX|$HOME/.antigravity-ide/config|config
+UNIX|$HOME/.antigravitycli/skills|skills
+UNIX|$HOME/.antigravitycli/config|config
 UNIX|$HOME/.agents/skills|skills
 UNIX|$HOME/.codeium/windsurf/skills|skills
 UNIX|$HOME/.qoder/skills|skills
@@ -28,6 +34,12 @@ WIN|$userProfile\.gemini\antigravity\skills|skills
 WIN|$userProfile\.gemini\antigravity\config|config
 WIN|$userProfile\.gemini\skills|skills
 WIN|$userProfile\.gemini\config|config
+WIN|$userProfile\.antigravity\skills|skills
+WIN|$userProfile\.antigravity\config|config
+WIN|$userProfile\.antigravity-ide\skills|skills
+WIN|$userProfile\.antigravity-ide\config|config
+WIN|$userProfile\.antigravitycli\skills|skills
+WIN|$userProfile\.antigravitycli\config|config
 WIN|$userProfile\.agents\skills|skills
 WIN|$userProfile\.codeium\windsurf\skills|skills
 WIN|$userProfile\.qoder\skills|skills
