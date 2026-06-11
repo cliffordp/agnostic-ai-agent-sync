@@ -10,6 +10,8 @@ Using multiple AI coding tools means your custom instructions end up scattered a
 
 Worse, existing sync approaches create regular symlinks that are **easily overwritten** by software updates, `git checkout` resets, or environment re-initialization. One bad update and your entire symlinked skill library vanishes.
 
+> **💡 Modern Alternative:** For users who prefer a protocol-level approach over file-system symlinks, check out [AutoVault](https://autovault.dev/). It provides a standardized way to manage and "serve" skills to different agents using the Model Context Protocol (MCP), though it requires Node.js and does not offer the OS-level immutable locking found in this project.
+
 ## The Solution
 
 **Agnostic AI Agent Sync** creates symlinks from each AI coding tool's config location to a single "Hub" folder you control, then **locks them at the OS level** so nothing can silently delete them (like a new `git clone` command for that slick new Skill).
