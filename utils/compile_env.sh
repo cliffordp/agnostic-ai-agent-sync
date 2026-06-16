@@ -46,12 +46,36 @@ else
 fi
 echo "\`\`\`" >> "$ENV_FILE"
 
-echo "### Homebrew Packages (Top Level)" >> "$ENV_FILE"
+
+# Detect OS
+OS_TYPE="unknown"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    OS_TYPE="mac"
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    OS_TYPE="linux"
+elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+    OS_TYPE="windows"
+fi
+
+echo "### System Packages ($OS_TYPE)" >> "$ENV_FILE"
 echo "\`\`\`text" >> "$ENV_FILE"
-if command -v brew &> /dev/null; then
+
+if [[ "$OS_TYPE" == "mac" || "$OS_TYPE" == "linux" ]] && command -v brew &> /dev/null; then
+    echo "#### Homebrew (Leaves)" >> "$ENV_FILE"
     brew leaves 2>/dev/null | awk '{print "- "$1}' >> "$ENV_FILE" || echo "Error reading brew leaves" >> "$ENV_FILE"
-else
-    echo "brew not installed" >> "$ENV_FILE"
+elif [[ "$OS_TYPE" == "linux" ]]; then
+    if command -v apt &> /dev/null; then
+        echo "#### APT (Manual Installs)" >> "$ENV_FILE"
+        apt-mark showmanual 2>/dev/null | awk '{print "- "$1}' >> "$ENV_FILE" || echo "Error reading apt list" >> "$ENV_FILE"
+    fi
+elif [[ "$OS_TYPE" == "windows" ]]; then
+    if command -v choco &> /dev/null; then
+        echo "#### Chocolatey" >> "$ENV_FILE"
+        choco list -lo 2>/dev/null | awk '{print "- "$1}' >> "$ENV_FILE" || echo "Error reading choco list" >> "$ENV_FILE"
+    elif command -v winget &> /dev/null; then
+        echo "#### Winget" >> "$ENV_FILE"
+        winget list 2>/dev/null | head -n 20 >> "$ENV_FILE" || echo "Error reading winget list" >> "$ENV_FILE"
+    fi
 fi
 echo "\`\`\`" >> "$ENV_FILE"
 
