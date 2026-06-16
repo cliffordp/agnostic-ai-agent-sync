@@ -476,6 +476,51 @@ configure_global_agents() {
     fi
 }
 
+
+# ─── Configure Global Trust Policies & MCP (The Bootloader) ───────
+configure_trust_policies() {
+    echo ""
+    echo -e "${CYAN}${BOLD}=== Global Trust Policies & MCP ===${RESET}"
+    
+    # 1. Gemini/Antigravity Trust Policy
+    GEMINI_TRUST_FILE="$HOME/.gemini/trustedFolders.json"
+    mkdir -p "$HOME/.gemini"
+
+    if [ ! -f "$GEMINI_TRUST_FILE" ]; then
+        echo "{}" > "$GEMINI_TRUST_FILE"
+    fi
+
+    # Use python to safely inject the trust policy
+    python3 -c '
+import json, sys
+filepath = sys.argv[1]
+vault_path = sys.argv[2]
+try:
+    with open(filepath, "r") as f:
+        data = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError):
+    data = {}
+data[vault_path] = "TRUST_FOLDER"
+with open(filepath, "w") as f:
+    json.dump(data, f, indent=2)
+' "$GEMINI_TRUST_FILE" "$HUB_PATH"
+
+    echo -e "  ${GREEN}[Configured]${RESET} Added Vault to Gemini/Antigravity trustedFolders.json"
+
+    # 2. Link Central MCP Config
+    CONFIG_DIR="$HUB_PATH/config"
+    if [ -f "$CONFIG_DIR/mcp_config.json" ]; then
+        # Link for Claude Desktop/Code
+        CLAUDE_CONFIG_DIR="$HOME/Library/Application Support/Claude"
+        mkdir -p "$CLAUDE_CONFIG_DIR"
+        ln -sf "$CONFIG_DIR/mcp_config.json" "$CLAUDE_CONFIG_DIR/claude_desktop_config.json"
+        
+        # Link for Gemini/Antigravity
+        ln -sf "$CONFIG_DIR/mcp_config.json" "$HOME/.gemini/mcp_config.json"
+        echo -e "  ${GREEN}[Configured]${RESET} Linked Central MCP Configuration"
+    fi
+}
+
 # ─── SYNC command (main) ────────────────────────────────────────
 cmd_sync() {
     echo ""
@@ -583,7 +628,7 @@ cmd_sync() {
         
         # Offer global configuration of agents even if synced
         configure_global_agents
-        
+        configure_trust_policies
         exit 0
     fi
 
@@ -691,6 +736,7 @@ cmd_sync() {
 
     # Offer global configuration of agents
     configure_global_agents
+    configure_trust_policies
 
     echo ""
     echo "Useful commands:"
