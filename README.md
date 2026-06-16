@@ -121,20 +121,78 @@ This script safely reverses the sync process without losing your new skills:
 
 ## FAQ
 
+**Q: How will I know if it's working?**
+If you're using Claude Code, for example...
+1. go to your Terminal > type `claude` to get into Claude Code > then type `list all available skills` and it should list them for you.
+2. *Then,* `exit` Claude Code, run this script (see instructions, above), get back into Claude Code, and type `list all available skills` again... and the same skills should be there.
+3. *Then,* go to `~/.claude/skills` and see if that's a *symlink* to your Vault location and that your skills are found there. (NOTE: this script only manages global/user-level skills, not project-level ones.)
+
 **Q: Will this delete my existing skills?**
-No. Any existing folders or files are renamed to `.backup_TIMESTAMP` before a symlink is created. You can always find them right next to the original path.
+No. Any existing folders or files are renamed to `.backup_TIMESTAMP` before a symlink is created. You can always find them right next to the original path. The script also offers to merge your scattered skills into the Vault before syncing. After a successful sync, you'll be asked if you want to clean up old backups.
+
+**Q: How do I remove old backup files?**
+The script offers to clean them up automatically after each sync. If you skipped that prompt, run `./sync.sh cleanup` (or `.\sync.ps1 cleanup` on Windows) anytime. It lists every backup with its size and asks before deleting anything.
 
 **Q: Do I have to answer the Hub wizard every time?**
-No. After the first run, your Hub path is saved to `~/.agnostic-ai-agent-sync`. Future runs remember it automatically and skip straight to the analysis.
+No. After the first run, your Vault path is saved to `~/.agnostic-ai-agent-sync`. Future runs remember it automatically and skip straight to the analysis.
 
 **Q: What if I install a new AI coding tool later?**
 Just re-run `./sync.sh`. It auto-detects newly installed agents and offers to wire them up. Already-synced agents are left untouched.
 
+**Q: What if a brand new AI coding tool hits the market? Will I need to download a new script?**
+No! The sync scripts are dynamic. Upon launch, they silently parse the `agents.map` file hosted directly on this GitHub repository. When we add support for a new tool to the map, your local script will automatically support it the very next time you run it.
+
+**Q: How do I install new skills after syncing?**
+Navigate to your Vault's `skills/` folder (or any synced path like `~/.claude/skills/` — they all point to the same place) and install normally. For example:
+
+```bash
+cd ~/.claude/skills/
+git clone https://github.com/cliffordp/claude-skills
+```
+
+The new skill instantly appears in every synced tool. The immutable lock protects the symlink itself from being deleted — but writing inside the directory works normally.
+
+**Q: What if a symlink already points to the right place?**
+The script detects this, skips re-creation, and just verifies the lock is applied. It's safe to run repeatedly.
+
+**Q: What if a symlink points somewhere unexpected?**
+The script flags it with a `[WARN]` in the analysis phase. You'll see exactly where it currently points and where it *should* point. If you confirm, it replaces it. If you abort, nothing changes.
+
+**Q: Do I need admin/root access?**
+On macOS, no. On Linux, `chattr` requires `sudo` (it will prompt). On Windows, Directory Junctions don't require admin — symlinks for `.cursorrules` may require Developer Mode enabled in Windows Settings.
+
 **Q: Can I sync skills across multiple computers?**
-Yes — that's a big reason this tool exists. Put your Hub folder in Dropbox, iCloud Drive, OneDrive, or any cloud-synced directory. Run `./sync.sh` on each machine. They'll all point to the same shared Hub.
+Yes — that's a big reason this tool exists. Put your Vault folder in Dropbox, iCloud Drive, OneDrive, or any cloud-synced directory. Run `./sync.sh` on each machine. They'll all point to the same shared Vault.
+
+**Q: Can I use iCloud Drive / Dropbox / OneDrive as my Vault?**
+Absolutely. The script's guided setup even offers these as default choices. Cloud storage is the recommended location for your Vault.
+
+**Q: What actually goes in the Vault?**
+Two primary folders: `skills/` (your reusable repositories, frameworks, and MCPs) and `config/` (your global instructions like `AGENTS.md` and your `mcp_config.json` registrar). 
 
 **Q: What about per-project rules like `.cursorrules` in a repo?**
 This tool only manages **global** (user-level) config. Per-project files inside your repositories (`.cursorrules`, `.claude/`, `.windsurf/rules/`) are untouched and work as normal alongside these global symlinks.
+
+**Q: Can I have different skills for different AI coding tools?**
+Not with this tool — the whole point is a single shared set. If you need tool-specific skills, manage those manually in per-project directories instead.
+
+**Q: Does this configure my agents for me?**
+Yes. The script offers an optional step at the end to set `AGENTS.md` as the default context file for tools like the Gemini CLI and Aider. It also automatically configures your Trust Policies (`trustedFolders.json`) and MCP configuration links.
+
+**Q: My AI coding tool just updated and something seems broken. What do I do?**
+Run `./sync.sh status` to check if the symlinks are still intact. If the lock held (which it should), you'll see all green. If something got overwritten, re-run `./sync.sh` to repair it.
+
+**Q: How do I add support for a new AI agent?**
+Open the `agents.map` file in this repository and add a new line following the pattern. PRs welcome! Because the scripts fetch this file dynamically, your pull request will instantly distribute support for the new tool to all users without them needing to re-download the script.
+
+**Q: Does running the sync script require an internet connection?**
+No. The script silently attempts a 2-second fetch of `agents.map` from GitHub to grab the latest supported tool paths, but if you are offline, it instantly falls back to a hardcoded offline list. Zero telemetry, and zero mandatory dependencies.
+
+**Q: Can I install this via Homebrew?**
+Not currently. Because this tool relies on local script execution to detect your home directory (`~/.claude`, etc.) and manages state via a saved `~/.agnostic-ai-agent-sync` config, dropping it into the `/usr/local/bin` / `/opt/homebrew` `$PATH` as a global executable isn't supported yet. The recommended approach is to keep the script in a dedicated directory (like `~/Documents/scripts/` or `~/GitHub/agent-sync/`).
+
+**Q: Why is a Vault better than cloning skill repos directly into `~/.claude/skills/`?**
+Without a centralized Vault, cloning multiple skill repos into a single agent directory (like `~/.claude/skills/`) mixes them together on disk. Running `git status` inside one repo shows the others as untracked files, requiring constant `.gitignore` maintenance. With a Vault, each framework is cloned as an independent sibling directory — clean `git status`, no `.gitignore` games, and every repo can be updated or removed without touching the others.
 
 ## License & Disclaimer
 
