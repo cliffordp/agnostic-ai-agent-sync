@@ -1,8 +1,15 @@
-# Agnostic AI Agent Sync
+# Agnostic Agent Router (The Library Bootloader)
 
-Maintain a single unified folder of AI agent skills and instructions, making it seamless to switch between Antigravity, Claude, Codex, Cursor, Qoder, Windsurf, and others.
+A portable, platform-agnostic operating environment for AI agents (Gemini, Antigravity, Claude). 
 
-Dependency-free, with OS-level immutable symlinks — protected from being accidentally deleted or overwritten by aggressive IDE updates.
+This repository has evolved from a simple symlink manager into a **Library Bootloader**. It is responsible for orchestrating the **Librarian-Operator** architecture: mapping global intelligence, automating trust policies, and managing a central MCP tool registry.
+
+## Core Capabilities
+
+1. **Agnostic Symlinking:** Connects `~/.gemini` and `~/.claude` to your central Dropbox brain.
+2. **Automated Trust Policies:** Injects your Vault into `trustedFolders.json` so your agent never gets blocked by security prompts when accessing its own skills.
+3. **Centralized MCP Registry:** Hard-links your `mcp_config.json` across all agent platforms so they share the exact same Active Systems.
+4. **Zero-Metadata Discovery:** Prepares the environment for the Librarian to infer tool purposes directly from READMEs or `package.json` files without requiring manual `SKILL.md` tagging.
 
 ## The Problem
 
