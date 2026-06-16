@@ -1,6 +1,6 @@
 # 🧠 Agnostic Agent Router
 
-> **The "Operating System" for your AI Agents.** A portable, platform-agnostic environment that turns generic chatbots into high-agency autonomous engineers.
+> **A unified capability router for your AI Agents.** A portable, platform-agnostic environment that turns generic coding assistants into high-agency autonomous engineers.
 
 [![Sync](https://img.shields.io/badge/Sync-Dropbox-blue.svg)](#)
 [![Supported Agents](https://img.shields.io/badge/Agents-Antigravity%20%7C%20Gemini%20%7C%20Claude%20%7C%20OpenAI-success.svg)](#)
