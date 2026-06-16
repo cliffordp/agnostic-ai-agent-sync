@@ -40,6 +40,36 @@ cd agnostic-agent-router
 ```
 *Note: Ensure your `AGENTS_DIR` variables in `sync.sh` map to your actual cloud storage location.*
 
+
+## The Mechanics (How the Bootloader Works)
+
+1. **Analyze** — Scans your system for installed AI agents, classifies what exists at each path (real folder, existing symlink, nothing), and prints a clear plan.
+2. **Confirm** — Asks for your explicit `y` approval. If you say no, zero files are touched.
+3. **Implement** — Backs up real folders, creates symlinks, and locks them with OS-level immutability (`chflags` on macOS, `chattr` on Linux, `icacls` on Windows).
+4. **Configure** — Safely injects trust policies and hard-links your MCP registry across clients.
+5. **Compile** — Silently compiles an `ENVIRONMENT.md` profile of your local CLI tools (like `trash`, `rg`, `bat`) so your agent can execute safely.
+
+### What This Script Does vs. What It Doesn't Do
+
+To prevent confusion, here is exactly what the bootloader handles:
+
+✅ **IT DOES:** Act as a local filesystem bridge. It seamlessly maps the native configuration and `skills/` folders belonging to all your local AI programs (Claude, Gemini CLI, Cursor, etc.) into a single unified directory (your Hub).
+
+✅ **IT DOES:** Protect your custom skills, `.cursorrules`, and instructions from being overwritten or silently deleted when your IDEs run aggressive background software updates.
+
+✅ **IT DOES:** Enable zero-effort multi-laptop synchronization if you choose to set your Hub location to a cloud storage folder like Dropbox or iCloud.
+
+❌ **IT DOES NOT:** Act as a package manager. It does not download, parse, extract, or install third-party plugins from remote internet marketplaces (e.g., using `/plugin install` in Claude bypasses this bridge entirely because it hides files in proprietary sub-directories).
+
+❌ **IT DOES NOT:** Translate file formats. If an AI tool rigidly requires a proprietary json manifest instead of a generic Markdown file, you still need to generate it. (We recommend using [Skill Porter](https://github.com/jduncan-rva/skill-porter) alongside this sync script to translate proprietary YAML into standard JSON).
+
+## Working with Skill Porter
+
+The Agnostic Agent Router pairs perfectly with translation tools like [Skill Porter](https://github.com/jduncan-rva/skill-porter). While they solve fundamentally different problems, they are highly complementary:
+
+- **Skill Porter** solves the *metadata format*: It translates proprietary YAML files into JSON so a single skill repository can be universally parsed by Claude, Gemini, and others.
+- **Agnostic Agent Router** solves the *storage pipeline*: It ensures that once your universal skill exists, you only ever need to store **one physical copy** of it in your cloud Vault. 
+
 ## Windows (PowerShell) Support
 
 The bootloader fully supports Windows via the included `sync.ps1` script. It uses Windows native Directory Junctions to achieve the same agnostic symlinking capability.
