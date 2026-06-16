@@ -521,6 +521,24 @@ with open(filepath, "w") as f:
     fi
 }
 
+
+# ─── Compile Environment Profile ──────────────────────────────────
+compile_environment() {
+    echo ""
+    echo -e "${CYAN}${BOLD}=== Compiling Environment Profile ===${RESET}"
+    
+    COMPILER_SCRIPT="$(dirname "$0")/utils/compile_env.sh"
+    if [ -f "$COMPILER_SCRIPT" ]; then
+        if bash "$COMPILER_SCRIPT"; then
+            echo -e "  ${GREEN}[Compiled]${RESET} Environment profile updated."
+        else
+            echo -e "  ${YELLOW}[Warning]${RESET} Failed to compile environment profile."
+        fi
+    else
+        echo -e "  ${YELLOW}[Warning]${RESET} Compiler script not found at $COMPILER_SCRIPT."
+    fi
+}
+
 # ─── SYNC command (main) ────────────────────────────────────────
 cmd_sync() {
     echo ""
@@ -629,6 +647,7 @@ cmd_sync() {
         # Offer global configuration of agents even if synced
         configure_global_agents
         configure_trust_policies
+        compile_environment
         exit 0
     fi
 
@@ -737,6 +756,7 @@ cmd_sync() {
     # Offer global configuration of agents
     configure_global_agents
     configure_trust_policies
+    compile_environment
 
     echo ""
     echo "Useful commands:"
